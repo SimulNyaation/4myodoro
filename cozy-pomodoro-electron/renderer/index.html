@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Cozy Pomodoro</title>
+<title>4myo1dolldoll</title>
 <style>
   :root {
     --bg: #f4ece1;
@@ -20,6 +20,7 @@
     --green-4: #7a5230;
     --line: #e6dac9;
     --shadow: rgba(120, 95, 70, 0.18);
+    --danger: #c8654f;
     --tb-h: 38px;
   }
 
@@ -93,8 +94,8 @@
   }
   .tabs button {
     flex: 1; border: none; background: transparent;
-    padding: 10px 8px; border-radius: 10px;
-    font-size: 14px; font-weight: 600; color: var(--ink-soft);
+    padding: 10px 4px; border-radius: 10px;
+    font-size: 13.5px; font-weight: 600; color: var(--ink-soft);
     cursor: pointer; transition: all 0.2s ease; font-family: inherit;
   }
   .tabs button.active {
@@ -111,13 +112,42 @@
     box-shadow: 0 6px 20px var(--shadow); border: 1px solid var(--line);
   }
 
-  /* ---- pomodoro ---- */
+  /* ---- pomodoro scene ---- */
   .scene {
+    position: relative;
     background: linear-gradient(160deg, #fbf3e7 0%, #f3e6d2 100%);
     border-radius: 18px; padding: 10px; margin-bottom: 18px;
     border: 1px solid var(--line); overflow: hidden;
   }
   .scene svg { width: 100%; height: auto; display: block; }
+
+  .scene-btn {
+    position: absolute; top: 8px; right: 8px; z-index: 3;
+    border: none; background: rgba(251,246,238,0.85); backdrop-filter: blur(4px);
+    border-radius: 10px; padding: 6px 10px; cursor: pointer;
+    font-size: 12px; font-weight: 600; color: var(--ink-soft);
+    font-family: inherit; box-shadow: 0 2px 6px var(--shadow);
+    transition: color 0.15s, background 0.15s;
+  }
+  .scene-btn:hover { color: var(--accent-deep); background: var(--card); }
+
+  .scene-menu {
+    position: absolute; top: 40px; right: 8px; z-index: 4;
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 14px; padding: 8px; box-shadow: 0 8px 24px var(--shadow);
+    display: none; grid-template-columns: repeat(2, 1fr); gap: 6px; width: 220px;
+  }
+  .scene-menu.open { display: grid; }
+  .scene-menu button {
+    border: 1.5px solid transparent; background: var(--bg-soft);
+    border-radius: 10px; padding: 9px 6px; cursor: pointer;
+    font-size: 12px; font-weight: 600; color: var(--ink);
+    font-family: inherit; display: flex; align-items: center; gap: 6px;
+    transition: all 0.15s;
+  }
+  .scene-menu button .em { font-size: 16px; }
+  .scene-menu button:hover { background: var(--bg); }
+  .scene-menu button.active { border-color: var(--accent); color: var(--accent-deep); background: var(--card); }
 
   .timer-display { text-align: center; margin: 6px 0 14px; }
   .timer-display .time {
@@ -153,33 +183,81 @@
     border: 3px solid var(--card); box-shadow: 0 2px 5px var(--shadow);
   }
 
-  /* tasks */
-  .task-list { list-style: none; margin-bottom: 18px; }
+  /* ---- projects + tasks ---- */
+  .projects { margin-bottom: 14px; }
+  .project {
+    background: var(--bg-soft); border-radius: 14px; padding: 12px;
+    margin-bottom: 12px; border: 1px solid var(--line);
+  }
+  .project-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .project-head .pj-dot { font-size: 14px; }
+  .project-head input.pj-name {
+    flex: 1; border: none; background: transparent; font-family: inherit;
+    font-size: 15px; font-weight: 700; color: var(--ink); outline: none; min-width: 0;
+  }
+  .project-head input.pj-name:focus { color: var(--accent-deep); }
+  .icon-btn {
+    border: none; background: transparent; cursor: pointer;
+    width: 26px; height: 26px; border-radius: 8px; font-family: inherit;
+    font-size: 14px; color: var(--ink-soft); display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s, color 0.15s; flex: none;
+  }
+  .icon-btn:hover { background: var(--bg); color: var(--ink); }
+  .icon-btn.del:hover { background: #f0d5cd; color: var(--danger); }
+
+  .subtask-list { list-style: none; }
   .task-item {
-    display: flex; align-items: center; gap: 12px;
-    padding: 11px 12px; border-radius: 12px;
-    background: var(--bg-soft); margin-bottom: 8px;
+    display: flex; align-items: center; gap: 9px;
+    padding: 8px 6px 8px 4px; border-radius: 10px;
+    background: var(--card); margin-bottom: 6px;
     transition: opacity 0.45s ease, transform 0.3s ease;
   }
   .task-item.dimmed { opacity: 0.28; }
   .task-item.removing { opacity: 0; transform: translateX(40px) scale(0.9); }
+  .task-item.focused { box-shadow: inset 3px 0 0 var(--accent); background: #fff7ee; }
+
+  .focus-dot {
+    -webkit-appearance: none; appearance: none; flex: none;
+    width: 16px; height: 16px; min-width: 16px; border-radius: 50%;
+    border: 2px solid var(--ink-soft); background: var(--card);
+    cursor: pointer; position: relative; transition: all 0.15s;
+  }
+  .focus-dot:hover { border-color: var(--accent); }
+  .focus-dot.on { border-color: var(--accent); }
+  .focus-dot.on::after {
+    content: ""; position: absolute; left: 3px; top: 3px;
+    width: 6px; height: 6px; border-radius: 50%; background: var(--accent);
+  }
+
   .task-item input[type="checkbox"] {
     -webkit-appearance: none; appearance: none;
-    width: 22px; height: 22px; min-width: 22px;
-    border-radius: 7px; border: 2px solid var(--accent);
+    width: 20px; height: 20px; min-width: 20px;
+    border-radius: 6px; border: 2px solid var(--accent);
     cursor: pointer; position: relative; transition: all 0.2s; background: var(--card);
   }
   .task-item input[type="checkbox"]:checked { background: var(--accent); }
   .task-item input[type="checkbox"]:checked::after {
-    content: ""; position: absolute; left: 6px; top: 2px;
+    content: ""; position: absolute; left: 5px; top: 1px;
     width: 6px; height: 11px; border: solid #fff; border-width: 0 3px 3px 0;
     transform: rotate(45deg);
   }
   .task-item input[type="text"] {
-    flex: 1; border: none; background: transparent;
-    font-size: 15px; color: var(--ink); font-family: inherit; outline: none;
+    flex: 1; border: none; background: transparent; min-width: 0;
+    font-size: 14.5px; color: var(--ink); font-family: inherit; outline: none;
   }
   .task-item input[type="text"]:focus { color: var(--accent-deep); }
+
+  .add-btn {
+    border: 1.5px dashed var(--line); background: transparent;
+    border-radius: 10px; padding: 9px; width: 100%; cursor: pointer;
+    font-size: 13px; font-weight: 600; color: var(--ink-soft); font-family: inherit;
+    transition: all 0.15s; margin-top: 2px;
+  }
+  .add-btn:hover { border-color: var(--accent); color: var(--accent-deep); background: #fff7ee; }
+  .add-task { margin-top: 4px; }
+  .add-project { border-style: solid; border-color: var(--accent); color: var(--accent-deep); margin-bottom: 4px; }
+  .add-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .add-btn:disabled:hover { border-color: var(--line); color: var(--ink-soft); background: transparent; }
 
   .btn-row { display: flex; gap: 10px; }
   button.action {
@@ -195,6 +273,30 @@
 
   .session-counter { text-align: center; font-size: 13px; color: var(--ink-soft); margin-top: 14px; }
   .session-counter b { color: var(--accent-deep); }
+
+  /* ---- music ---- */
+  .music-bar { display: flex; gap: 6px; margin-bottom: 10px; }
+  .music-bar .svc {
+    flex: 1; border: 1.5px solid var(--line); background: var(--bg-soft);
+    border-radius: 10px; padding: 9px 4px; cursor: pointer; font-family: inherit;
+    font-size: 12.5px; font-weight: 700; color: var(--ink-soft); transition: all 0.15s;
+  }
+  .music-bar .svc:hover { color: var(--ink); }
+  .music-bar .svc.active { border-color: var(--accent); color: var(--accent-deep); background: var(--card); }
+  .music-tools { display: flex; gap: 6px; margin-bottom: 10px; }
+  .music-tools button {
+    border: none; background: var(--bg-soft); border-radius: 9px; cursor: pointer;
+    padding: 7px 11px; font-size: 13px; color: var(--ink); font-family: inherit; font-weight: 600;
+  }
+  .music-tools button:hover { background: var(--bg); }
+  .music-frame {
+    width: 100%; height: 560px; border-radius: 14px; overflow: hidden;
+    border: 1px solid var(--line); background: #fff;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--ink-soft); font-size: 13px;
+  }
+  .music-frame webview { width: 100%; height: 100%; border: 0; display: block; }
+  .music-note { font-size: 11.5px; color: var(--ink-soft); margin-top: 10px; line-height: 1.5; }
 
   /* ---- calendar ---- */
   .cal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
@@ -242,15 +344,35 @@
     border: none; background: var(--bg-soft); padding: 9px 14px; border-radius: 10px;
     font-size: 13px; cursor: pointer; color: var(--ink); margin-bottom: 16px; font-family: inherit; font-weight: 600;
   }
+  .delete-rec-btn {
+    border: 1px solid #e7c3b8; background: #fbeee9; color: var(--danger);
+    padding: 11px 14px; border-radius: 12px; font-size: 13px; font-weight: 700;
+    cursor: pointer; font-family: inherit; width: 100%; margin-top: 8px; transition: all 0.15s;
+  }
+  .delete-rec-btn:hover { background: #f6e0d8; }
+  .delete-rec-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
   .running-mode .config-zone { display: none; }
   .running-mode .current-task-pill { display: block; }
+  .running-mode .focus-dot,
+  .running-mode .icon-btn,
+  .running-mode .add-btn { display: none; }
+
+  /* update toast */
+  .toast {
+    position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%) translateY(20px);
+    background: var(--ink); color: #fff; padding: 10px 16px; border-radius: 12px;
+    font-size: 13px; font-weight: 600; box-shadow: 0 6px 20px var(--shadow);
+    opacity: 0; pointer-events: none; transition: all 0.3s ease; z-index: 200;
+    max-width: 80%; text-align: center;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 </style>
 </head>
 <body>
 <!-- frameless titlebar -->
 <div class="titlebar">
-  <div class="tb-title">🐱 Cozy Pomodoro</div>
+  <div class="tb-title">🐱 4myo1dolldoll</div>
   <div class="tb-controls">
     <button id="pinBtn" title="항상 위에 표시">📌</button>
     <button id="minBtn" title="최소화">─</button>
@@ -260,12 +382,13 @@
 
 <div class="app">
   <header>
-    <h1>🐱 Cozy Pomodoro</h1>
-    <p>고양이와 함께하는 몰입 시간</p>
+    <h1>🐱 4myo1dolldoll</h1>
+    <p>고양이·강아지와 함께하는 몰입 시간</p>
   </header>
 
   <nav class="tabs">
     <button data-screen="pomo" class="active">뽀모도로</button>
+    <button data-screen="music">음악</button>
     <button data-screen="cal">달력</button>
     <button data-screen="detail">기록</button>
   </nav>
@@ -274,53 +397,9 @@
   <section class="screen active" id="screen-pomo">
     <div class="card" id="pomoCard">
       <div class="scene">
-        <svg viewBox="0 0 320 170" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <radialGradient id="floor" cx="50%" cy="100%" r="80%">
-              <stop offset="0%" stop-color="#f3e3cb"/>
-              <stop offset="100%" stop-color="#ecd9bd"/>
-            </radialGradient>
-          </defs>
-          <ellipse cx="160" cy="150" rx="150" ry="22" fill="url(#floor)"/>
-          <ellipse cx="160" cy="150" rx="95" ry="14" fill="#e3c79f" opacity="0.6"/>
-
-          <g id="toy">
-            <circle cx="0" cy="0" r="13" fill="#d98e63"/>
-            <path d="M -13 0 Q 0 -9 13 0 M -11 5 Q 0 -4 11 5 M -11 -5 Q 0 4 11 -5 M 0 -13 Q 9 0 0 13 M -6 -11 Q 4 0 -4 12 M 6 -11 Q -4 0 4 12"
-                  stroke="#b96f47" stroke-width="1.3" fill="none" opacity="0.8"/>
-          </g>
-
-          <g id="cat">
-            <path id="tail" d="M 205 120 Q 250 118 248 95 Q 246 78 232 84"
-                  stroke="#9a8576" stroke-width="11" fill="none" stroke-linecap="round"/>
-            <ellipse cx="180" cy="120" rx="42" ry="30" fill="#a8917f"/>
-            <ellipse cx="180" cy="126" rx="30" ry="20" fill="#c4b1a1"/>
-            <g id="paws">
-              <rect x="150" y="120" width="11" height="26" rx="5.5" fill="#a8917f"/>
-              <rect x="166" y="124" width="11" height="24" rx="5.5" fill="#9a8576"/>
-            </g>
-            <g id="head">
-              <ellipse cx="148" cy="98" rx="26" ry="24" fill="#a8917f"/>
-              <path d="M 128 84 L 122 64 L 142 78 Z" fill="#a8917f"/>
-              <path d="M 168 84 L 174 64 L 154 78 Z" fill="#a8917f"/>
-              <path d="M 129 82 L 126 70 L 138 79 Z" fill="#e0b9a0"/>
-              <path d="M 167 82 L 170 70 L 158 79 Z" fill="#e0b9a0"/>
-              <ellipse cx="148" cy="102" rx="16" ry="13" fill="#c4b1a1"/>
-              <g id="eyes">
-                <circle cx="140" cy="96" r="3.2" fill="#4a3b2f"/>
-                <circle cx="156" cy="96" r="3.2" fill="#4a3b2f"/>
-                <circle cx="141" cy="95" r="1" fill="#fff"/>
-                <circle cx="157" cy="95" r="1" fill="#fff"/>
-              </g>
-              <path d="M 146 103 L 150 103 L 148 106 Z" fill="#d98e63"/>
-              <path d="M 148 106 Q 144 109 141 106 M 148 106 Q 152 109 155 106" stroke="#8a7665" stroke-width="1" fill="none"/>
-              <path d="M 132 101 L 118 99 M 132 104 L 119 105 M 164 101 L 178 99 M 164 104 L 177 105"
-                    stroke="#cdbcab" stroke-width="1" fill="none"/>
-            </g>
-          </g>
-
-          <text id="zzz" x="205" y="70" font-size="16" fill="#b9a48f" opacity="0" font-family="sans-serif">z</text>
-        </svg>
+        <button class="scene-btn" id="sceneBtn">🎨 장면</button>
+        <div class="scene-menu" id="sceneMenu"></div>
+        <div id="sceneStage"></div>
       </div>
 
       <div class="timer-display">
@@ -341,16 +420,39 @@
           </div>
           <input type="range" id="durSlider" min="30" max="120" step="5" value="30" />
         </div>
-        <ul class="task-list" id="taskList"></ul>
       </div>
 
-      <div class="btn-row">
+      <div class="projects" id="projectList"></div>
+      <button class="add-btn add-project" id="addProjectBtn">＋ 프로젝트 추가</button>
+
+      <div class="btn-row" style="margin-top:14px;">
         <button class="action btn-start" id="startBtn">집중 시작</button>
         <button class="action btn-pause" id="pauseBtn" style="display:none;">일시정지</button>
         <button class="action btn-stop" id="stopBtn" style="display:none;">정지</button>
       </div>
 
       <div class="session-counter">오늘 완료한 세션: <b id="todaySessions">0</b>회</div>
+    </div>
+  </section>
+
+  <!-- ============ MUSIC ============ -->
+  <section class="screen" id="screen-music">
+    <div class="card">
+      <div class="music-bar">
+        <button class="svc" data-svc="ytmusic">YouTube Music</button>
+        <button class="svc" data-svc="spotify">Spotify</button>
+        <button class="svc" data-svc="soundcloud">SoundCloud</button>
+      </div>
+      <div class="music-tools">
+        <button id="mBack" title="뒤로">‹ 뒤로</button>
+        <button id="mReload" title="새로고침">↻ 새로고침</button>
+        <button id="mHome" title="홈">⌂ 홈</button>
+      </div>
+      <div class="music-frame" id="musicFrame">불러오는 중…</div>
+      <p class="music-note">
+        내 계정으로 로그인하면 다음에도 유지됩니다. 친구는 Spotify·SoundCloud로도 자유롭게 들을 수 있어요.<br>
+        ⚠ Spotify는 보호된 스트리밍(Widevine) 특성상 일부 환경에서 재생이 제한될 수 있어요. 그럴 땐 YouTube Music / SoundCloud를 이용하세요.
+      </p>
     </div>
   </section>
 
@@ -386,18 +488,21 @@
         <div class="stat-box"><div class="num" id="statSessions">0</div><div class="lbl">완료 세션</div></div>
       </div>
       <ul class="done-list" id="doneList"></ul>
+      <button class="delete-rec-btn" id="deleteRecBtn" disabled>🗑 이 날 기록 삭제</button>
     </div>
   </section>
 </div>
+
+<div class="toast" id="toast"></div>
 
 <script>
 (function () {
   "use strict";
 
+  var $ = function (id) { return document.getElementById(id); };
+
   /* ---------- window controls (frameless) ---------- */
-  var pinBtn = document.getElementById("pinBtn");
-  var minBtn = document.getElementById("minBtn");
-  var closeBtn = document.getElementById("closeBtn");
+  var pinBtn = $("pinBtn"), minBtn = $("minBtn"), closeBtn = $("closeBtn");
   if (window.cozy) {
     window.cozy.isAlwaysOnTop().then(function (v) { pinBtn.classList.toggle("active", !!v); });
     pinBtn.addEventListener("click", function () {
@@ -405,18 +510,74 @@
     });
     minBtn.addEventListener("click", function () { window.cozy.minimize(); });
     closeBtn.addEventListener("click", function () { window.cozy.hideToTray(); });
+    if (window.cozy.onUpdaterStatus) {
+      window.cozy.onUpdaterStatus(function (msg) { showToast(msg); });
+    }
   }
 
-  // ---------- storage ----------
-  var STORE_KEY = "cozyPomodoroData_v1";
-  var data = load();
+  /* ---------- toast ---------- */
+  var toastEl = $("toast"), toastTimer = null;
+  function showToast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toastEl.classList.remove("show"); }, 3200);
+  }
+
+  /* ---------- storage (+ migration from v1) ---------- */
+  var STORE_KEY = "4myoDolldollData_v1";
+  var OLD_KEY = "cozyPomodoroData_v1";
+
+  function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+
+  function defaultData() {
+    return {
+      version: 2,
+      records: {},
+      projects: [{ id: uid(), name: "오늘 할 일", tasks: [] }],
+      settings: { scene: "cat", music: "ytmusic", minutes: 30 },
+      selected: null,
+      todayKey: null
+    };
+  }
+
   function load() {
     try {
       var d = JSON.parse(localStorage.getItem(STORE_KEY));
-      if (d && d.records) return d;
+      if (d && d.projects && d.records) return normalize(d);
     } catch (e) {}
-    return { records: {}, todayTasks: ["", "", "", "", ""], todayKey: null };
+    try {
+      var old = JSON.parse(localStorage.getItem(OLD_KEY));
+      if (old && old.records) {
+        var nd = defaultData();
+        nd.records = old.records || {};
+        var tasks = (old.todayTasks || []).filter(function (t) { return t && t.trim(); })
+          .map(function (t) { return { id: uid(), text: t.trim(), done: false }; });
+        nd.projects = [{ id: uid(), name: "오늘 할 일", tasks: tasks }];
+        return nd;
+      }
+    } catch (e) {}
+    return defaultData();
   }
+
+  function normalize(d) {
+    if (!d.settings) d.settings = { scene: "cat", music: "ytmusic", minutes: 30 };
+    if (!d.settings.scene) d.settings.scene = "cat";
+    if (!d.settings.music) d.settings.music = "ytmusic";
+    if (!d.settings.minutes) d.settings.minutes = 30;
+    if (!Array.isArray(d.projects) || !d.projects.length) {
+      d.projects = [{ id: uid(), name: "오늘 할 일", tasks: [] }];
+    }
+    d.projects.forEach(function (p) {
+      if (!p.id) p.id = uid();
+      if (!Array.isArray(p.tasks)) p.tasks = [];
+      p.tasks.forEach(function (t) { if (!t.id) t.id = uid(); });
+    });
+    if (!d.records) d.records = {};
+    return d;
+  }
+
+  var data = load();
   function save() { localStorage.setItem(STORE_KEY, JSON.stringify(data)); }
 
   function dateKey(d) {
@@ -425,21 +586,18 @@
       String(d.getDate()).padStart(2, "0");
   }
   var todayKey = dateKey(new Date());
-
-  if (data.todayKey !== todayKey) {
-    data.todayKey = todayKey;
-    data.todayTasks = ["", "", "", "", ""];
-    save();
-  }
+  if (data.todayKey !== todayKey) { data.todayKey = todayKey; save(); }
 
   function recordFor(key) {
     if (!data.records[key]) data.records[key] = { tasks: [], sessions: 0 };
     return data.records[key];
   }
 
-  // ---------- elements ----------
-  var $ = function (id) { return document.getElementById(id); };
-  var taskListEl = $("taskList");
+  var MAX_PROJECTS = 4, MAX_TASKS = 5;
+
+  /* ---------- elements ---------- */
+  var projectListEl = $("projectList");
+  var addProjectBtn = $("addProjectBtn");
   var durSlider = $("durSlider"), durVal = $("durVal");
   var timeText = $("timeText"), stateLabel = $("stateLabel");
   var startBtn = $("startBtn"), pauseBtn = $("pauseBtn"), stopBtn = $("stopBtn");
@@ -447,98 +605,215 @@
   var currentTaskText = $("currentTaskText");
   var todaySessionsEl = $("todaySessions");
 
-  // ---------- task list rendering ----------
-  function renderTasks() {
-    taskListEl.innerHTML = "";
-    data.todayTasks.forEach(function (text, i) {
-      var li = document.createElement("li");
-      li.className = "task-item";
-      li.dataset.index = i;
+  /* ====================================================
+     PROJECTS + SUBTASKS
+  ==================================================== */
+  function findTask(ref) {
+    if (!ref) return null;
+    for (var i = 0; i < data.projects.length; i++) {
+      var p = data.projects[i];
+      if (p.id !== ref.projectId) continue;
+      for (var j = 0; j < p.tasks.length; j++) {
+        if (p.tasks[j].id === ref.taskId) return { project: p, task: p.tasks[j] };
+      }
+    }
+    return null;
+  }
 
-      var cb = document.createElement("input");
-      cb.type = "checkbox";
+  function firstNonEmpty() {
+    for (var i = 0; i < data.projects.length; i++) {
+      var p = data.projects[i];
+      for (var j = 0; j < p.tasks.length; j++) {
+        if (p.tasks[j].text.trim()) return { projectId: p.id, taskId: p.tasks[j].id };
+      }
+    }
+    return null;
+  }
 
-      var tx = document.createElement("input");
-      tx.type = "text";
-      tx.value = text;
-      tx.placeholder = "할 일 " + (i + 1);
-      tx.addEventListener("input", function () {
-        data.todayTasks[i] = tx.value;
-        save();
-      });
+  function getFocusRef() {
+    if (data.selected && findTask(data.selected)) return data.selected;
+    return firstNonEmpty();
+  }
 
-      cb.addEventListener("change", function () {
-        if (cb.checked) completeTask(i, li, tx.value);
-      });
+  function updateCurrentTaskText() {
+    var hit = findTask(getFocusRef());
+    currentTaskText.textContent = (hit && hit.task.text.trim()) ? hit.task.text.trim() : "모든 태스크 완료! 🎉";
+  }
 
-      li.appendChild(cb);
-      li.appendChild(tx);
-      taskListEl.appendChild(li);
+  function renderProjects() {
+    projectListEl.innerHTML = "";
+    data.projects.forEach(function (proj) {
+      var box = document.createElement("div");
+      box.className = "project";
+
+      var head = document.createElement("div");
+      head.className = "project-head";
+      var dot = document.createElement("span");
+      dot.className = "pj-dot"; dot.textContent = "📂";
+      var name = document.createElement("input");
+      name.className = "pj-name"; name.type = "text"; name.value = proj.name;
+      name.placeholder = "프로젝트 이름";
+      name.readOnly = running;
+      name.addEventListener("input", function () { proj.name = name.value; save(); });
+      var pdel = document.createElement("button");
+      pdel.className = "icon-btn del"; pdel.title = "프로젝트 삭제"; pdel.textContent = "✕";
+      pdel.addEventListener("click", function () { deleteProject(proj.id); });
+      head.appendChild(dot); head.appendChild(name);
+      if (data.projects.length > 1) head.appendChild(pdel);
+      box.appendChild(head);
+
+      var ul = document.createElement("ul");
+      ul.className = "subtask-list";
+      proj.tasks.forEach(function (task) { ul.appendChild(buildTaskRow(proj, task)); });
+      box.appendChild(ul);
+
+      var addT = document.createElement("button");
+      addT.className = "add-btn add-task";
+      if (proj.tasks.length >= MAX_TASKS) { addT.textContent = "할 일은 최대 " + MAX_TASKS + "개"; addT.disabled = true; }
+      else addT.textContent = "＋ 할 일 추가";
+      addT.addEventListener("click", function () { addTask(proj.id); });
+      box.appendChild(addT);
+
+      projectListEl.appendChild(box);
     });
+
+    addProjectBtn.disabled = data.projects.length >= MAX_PROJECTS;
+    addProjectBtn.textContent = data.projects.length >= MAX_PROJECTS
+      ? "프로젝트는 최대 " + MAX_PROJECTS + "개" : "＋ 프로젝트 추가";
+
     applyDimming();
   }
 
-  function applyDimming() {
-    var items = taskListEl.querySelectorAll(".task-item");
-    items.forEach(function (li) {
-      var idx = Number(li.dataset.index);
-      if (running && idx !== activeTaskIndex) li.classList.add("dimmed");
-      else li.classList.remove("dimmed");
+  function buildTaskRow(proj, task) {
+    var li = document.createElement("li");
+    li.className = "task-item";
+    li.dataset.pid = proj.id;
+    li.dataset.tid = task.id;
+
+    var fdot = document.createElement("button");
+    fdot.className = "focus-dot";
+    fdot.title = "이 일에 집중";
+    var ref = getFocusRef();
+    if (ref && ref.projectId === proj.id && ref.taskId === task.id) {
+      fdot.classList.add("on"); li.classList.add("focused");
+    }
+    fdot.addEventListener("click", function () {
+      if (running) return;
+      data.selected = { projectId: proj.id, taskId: task.id };
+      save(); renderProjects(); updateCurrentTaskText();
     });
+
+    var cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.addEventListener("change", function () {
+      if (cb.checked) completeTask(proj.id, task.id, li);
+    });
+
+    var tx = document.createElement("input");
+    tx.type = "text"; tx.value = task.text;
+    tx.placeholder = "할 일 입력";
+    tx.readOnly = running;
+    tx.addEventListener("input", function () {
+      task.text = tx.value; save();
+      if (running) updateCurrentTaskText();
+    });
+
+    var tdel = document.createElement("button");
+    tdel.className = "icon-btn del"; tdel.title = "삭제"; tdel.textContent = "✕";
+    tdel.addEventListener("click", function () { deleteTask(proj.id, task.id); });
+
+    li.appendChild(fdot); li.appendChild(cb); li.appendChild(tx); li.appendChild(tdel);
+    return li;
+  }
+
+  function applyDimming() {
+    var items = projectListEl.querySelectorAll(".task-item");
+    var focus = getFocusRef();
     items.forEach(function (li) {
-      li.querySelector('input[type="text"]').readOnly = running;
+      var isFocus = focus && li.dataset.pid === focus.projectId && li.dataset.tid === focus.taskId;
+      if (running && !isFocus) li.classList.add("dimmed");
+      else li.classList.remove("dimmed");
     });
   }
 
-  function completeTask(i, li, text) {
-    var label = (text || "").trim();
-    if (!label) label = "할 일 " + (i + 1);
-    var rec = recordFor(todayKey);
-    rec.tasks.push(label);
+  function addProject() {
+    if (data.projects.length >= MAX_PROJECTS) return;
+    data.projects.push({ id: uid(), name: "새 프로젝트", tasks: [] });
+    save(); renderProjects();
+  }
+
+  function deleteProject(id) {
+    var p = data.projects.find(function (x) { return x.id === id; });
+    if (p && p.tasks.some(function (t) { return t.text.trim(); })) {
+      if (!confirm("이 프로젝트와 안의 할 일을 삭제할까요?")) return;
+    }
+    data.projects = data.projects.filter(function (x) { return x.id !== id; });
+    if (!data.projects.length) data.projects.push({ id: uid(), name: "오늘 할 일", tasks: [] });
+    if (data.selected && data.selected.projectId === id) data.selected = null;
+    save(); renderProjects(); updateCurrentTaskText();
+  }
+
+  function addTask(projectId) {
+    var p = data.projects.find(function (x) { return x.id === projectId; });
+    if (!p || p.tasks.length >= MAX_TASKS) return;
+    var t = { id: uid(), text: "", done: false };
+    p.tasks.push(t);
+    save(); renderProjects();
+    var sel = '.task-item[data-pid="' + projectId + '"][data-tid="' + t.id + '"] input[type="text"]';
+    var inp = projectListEl.querySelector(sel);
+    if (inp) inp.focus();
+  }
+
+  function deleteTask(projectId, taskId) {
+    var p = data.projects.find(function (x) { return x.id === projectId; });
+    if (!p) return;
+    p.tasks = p.tasks.filter(function (t) { return t.id !== taskId; });
+    if (data.selected && data.selected.taskId === taskId) data.selected = null;
+    save(); renderProjects(); updateCurrentTaskText();
+  }
+
+  function completeTask(projectId, taskId, li) {
+    var p = data.projects.find(function (x) { return x.id === projectId; });
+    if (!p) return;
+    var t = p.tasks.find(function (x) { return x.id === taskId; });
+    if (!t) return;
+    var label = (t.text || "").trim() || "할 일";
+    recordFor(todayKey).tasks.push(label);
     save();
 
     li.classList.add("removing");
     setTimeout(function () {
-      data.todayTasks[i] = "";
+      p.tasks = p.tasks.filter(function (x) { return x.id !== taskId; });
+      if (data.selected && data.selected.taskId === taskId) data.selected = null;
       save();
-      renderTasks();
-      if (running) {
-        activeTaskIndex = firstNonEmptyIndex();
-        updateCurrentTaskText();
-        applyDimming();
-      }
+      renderProjects();
+      if (running) { updateCurrentTaskText(); applyDimming(); }
     }, 450);
     refreshCalendar();
   }
 
-  function firstNonEmptyIndex() {
-    for (var i = 0; i < data.todayTasks.length; i++) {
-      if (data.todayTasks[i].trim()) return i;
-    }
-    return 0;
-  }
-  function updateCurrentTaskText() {
-    var t = data.todayTasks[activeTaskIndex];
-    currentTaskText.textContent = (t && t.trim()) ? t.trim() : "모든 태스크 완료! 🎉";
-  }
+  addProjectBtn.addEventListener("click", addProject);
 
-  // ---------- duration slider ----------
+  /* ---------- duration slider ---------- */
+  durSlider.value = data.settings.minutes;
+  durVal.textContent = data.settings.minutes + "분";
   durSlider.addEventListener("input", function () {
     var m = Number(durSlider.value);
     durVal.textContent = m + "분";
+    data.settings.minutes = m; save();
     if (!running) {
-      totalSeconds = m * 60;
-      remaining = totalSeconds;
-      renderTime();
+      totalSeconds = m * 60; remaining = totalSeconds; renderTime();
+      if (sceneKind() === "clock") drawSceneIdle();
     }
   });
 
-  // ---------- timer engine ----------
+  /* ====================================================
+     TIMER ENGINE
+  ==================================================== */
   var running = false, paused = false;
   var totalSeconds = 30 * 60;
   var remaining = totalSeconds;
   var endTime = 0;
-  var activeTaskIndex = 0;
   var tickInterval = null;
 
   function renderTime() {
@@ -550,7 +825,7 @@
 
   function startTimer() {
     running = true; paused = false;
-    activeTaskIndex = firstNonEmptyIndex();
+    if (!data.selected || !findTask(data.selected)) data.selected = firstNonEmpty();
     if (remaining <= 0) remaining = totalSeconds;
     endTime = Date.now() + remaining * 1000;
 
@@ -559,10 +834,9 @@
     pauseBtn.style.display = ""; pauseBtn.textContent = "일시정지";
     stopBtn.style.display = "";
     stateLabel.textContent = "집중 중";
-    setCatPlaying(true);
+    setScenePlaying(true);
     updateCurrentTaskText();
-    renderTasks();
-    applyDimming();
+    renderProjects();
     runInterval();
   }
 
@@ -570,12 +844,8 @@
     clearInterval(tickInterval);
     tickInterval = setInterval(function () {
       remaining = (endTime - Date.now()) / 1000;
-      if (remaining <= 0) {
-        remaining = 0; renderTime();
-        finishSession();
-      } else {
-        renderTime();
-      }
+      if (remaining <= 0) { remaining = 0; renderTime(); finishSession(); }
+      else renderTime();
     }, 250);
   }
 
@@ -587,13 +857,13 @@
       remaining = (endTime - Date.now()) / 1000;
       stateLabel.textContent = "일시정지";
       pauseBtn.textContent = "이어서";
-      setCatPlaying(false);
+      setScenePlaying(false);
     } else {
       paused = false;
       endTime = Date.now() + remaining * 1000;
       stateLabel.textContent = "집중 중";
       pauseBtn.textContent = "일시정지";
-      setCatPlaying(true);
+      setScenePlaying(true);
       runInterval();
     }
   }
@@ -608,10 +878,9 @@
   function finishSession() {
     clearInterval(tickInterval);
     running = false; paused = false;
-    var rec = recordFor(todayKey);
-    rec.sessions += 1;
+    recordFor(todayKey).sessions += 1;
     save();
-    playMeow();
+    playFinishSound();
     refreshCalendar();
     updateTodaySessions();
     remaining = totalSeconds;
@@ -624,9 +893,9 @@
     pauseBtn.style.display = "none";
     stopBtn.style.display = "none";
     stateLabel.textContent = label;
-    setCatPlaying(false);
+    setScenePlaying(false);
     renderTime();
-    renderTasks();
+    renderProjects();
   }
 
   function updateTodaySessions() {
@@ -638,41 +907,190 @@
   pauseBtn.addEventListener("click", pauseTimer);
   stopBtn.addEventListener("click", stopTimer);
 
-  // ---------- cat animation ----------
-  var toy = $("toy"), tail = $("tail"), paws = $("paws"), head = $("head"), zzz = $("zzz");
-  var animPlaying = false, animStart = 0, animFrame = null;
-  function setCatPlaying(on) {
+  /* ====================================================
+     SCENES (6 variants)
+  ==================================================== */
+  var SCENES = [
+    { key: "cat",    em: "🐱", label: "기본 고양이" },
+    { key: "cat2",   em: "🧡", label: "치즈 고양이" },
+    { key: "cat3",   em: "🩶", label: "회색 고양이" },
+    { key: "cat4",   em: "🖤", label: "턱시도 고양이" },
+    { key: "bichon", em: "🐶", label: "비숑 강아지" },
+    { key: "clock",  em: "⏰", label: "뽀모도로 시계" }
+  ];
+
+  var CAT_PALETTES = {
+    cat:  { fur: "#a8917f", furDark: "#9a8576", belly: "#c4b1a1", earInner: "#e0b9a0", nose: "#d98e63", whisker: "#cdbcab", toy: "#d98e63", toyLine: "#b96f47", stripes: false },
+    cat2: { fur: "#e0a86a", furDark: "#cf8f4f", belly: "#f3dcb6", earInner: "#e8a98a", nose: "#c0764c", whisker: "#e6cda6", toy: "#7fa8c9", toyLine: "#5d86a6", stripes: true },
+    cat3: { fur: "#9aa0a6", furDark: "#7f868c", belly: "#c6cbcf", earInner: "#d8a9a9", nose: "#b08a8a", whisker: "#cdd2d6", toy: "#d98e63", toyLine: "#b96f47", stripes: true },
+    cat4: { fur: "#463f39", furDark: "#332e2a", belly: "#f4efe9", earInner: "#cf9a9a", nose: "#d98e63", whisker: "#b9a89a", toy: "#d98e63", toyLine: "#b96f47", stripes: false }
+  };
+
+  var CLOCK_R = 60;
+  var CLOCK_C = 2 * Math.PI * CLOCK_R;
+
+  function floorSVG() {
+    return '<defs><radialGradient id="floor" cx="50%" cy="100%" r="80%">' +
+      '<stop offset="0%" stop-color="#f3e3cb"/><stop offset="100%" stop-color="#ecd9bd"/></radialGradient></defs>' +
+      '<ellipse cx="160" cy="150" rx="150" ry="22" fill="url(#floor)"/>' +
+      '<ellipse cx="160" cy="150" rx="95" ry="14" fill="#e3c79f" opacity="0.6"/>';
+  }
+  function zzzSVG() {
+    return '<text id="zzz" x="205" y="70" font-size="16" fill="#b9a48f" opacity="0" font-family="sans-serif">z</text>';
+  }
+
+  function catSVG(p) {
+    var stripes = p.stripes ?
+      '<path d="M 168 104 q 12 -4 24 0 M 170 112 q 12 -3 22 0 M 172 120 q 10 -2 18 0" stroke="' + p.furDark + '" stroke-width="2" fill="none" opacity="0.6"/>' +
+      '<path d="M 138 84 l 3 -7 M 148 82 l 0 -7 M 158 84 l -3 -7" stroke="' + p.furDark + '" stroke-width="2" fill="none" opacity="0.55"/>' : '';
+    return floorSVG() +
+      '<g id="toy"><circle cx="0" cy="0" r="13" fill="' + p.toy + '"/>' +
+        '<path d="M -13 0 Q 0 -9 13 0 M -11 5 Q 0 -4 11 5 M -11 -5 Q 0 4 11 -5 M 0 -13 Q 9 0 0 13 M -6 -11 Q 4 0 -4 12 M 6 -11 Q -4 0 4 12" stroke="' + p.toyLine + '" stroke-width="1.3" fill="none" opacity="0.8"/></g>' +
+      '<g id="cat">' +
+        '<path id="tail" d="M 205 120 Q 250 118 248 95 Q 246 78 232 84" stroke="' + p.furDark + '" stroke-width="11" fill="none" stroke-linecap="round"/>' +
+        '<ellipse cx="180" cy="120" rx="42" ry="30" fill="' + p.fur + '"/>' +
+        '<ellipse cx="180" cy="126" rx="30" ry="20" fill="' + p.belly + '"/>' +
+        '<g id="paws"><rect x="150" y="120" width="11" height="26" rx="5.5" fill="' + p.fur + '"/><rect x="166" y="124" width="11" height="24" rx="5.5" fill="' + p.furDark + '"/></g>' +
+        '<g id="head">' +
+          '<ellipse cx="148" cy="98" rx="26" ry="24" fill="' + p.fur + '"/>' +
+          '<path d="M 128 84 L 122 64 L 142 78 Z" fill="' + p.fur + '"/>' +
+          '<path d="M 168 84 L 174 64 L 154 78 Z" fill="' + p.fur + '"/>' +
+          '<path d="M 129 82 L 126 70 L 138 79 Z" fill="' + p.earInner + '"/>' +
+          '<path d="M 167 82 L 170 70 L 158 79 Z" fill="' + p.earInner + '"/>' +
+          '<ellipse cx="148" cy="102" rx="16" ry="13" fill="' + p.belly + '"/>' +
+          stripes +
+          '<g id="eyes"><circle cx="140" cy="96" r="3.2" fill="#3a2f28"/><circle cx="156" cy="96" r="3.2" fill="#3a2f28"/><circle cx="141" cy="95" r="1" fill="#fff"/><circle cx="157" cy="95" r="1" fill="#fff"/></g>' +
+          '<path d="M 146 103 L 150 103 L 148 106 Z" fill="' + p.nose + '"/>' +
+          '<path d="M 148 106 Q 144 109 141 106 M 148 106 Q 152 109 155 106" stroke="#8a7665" stroke-width="1" fill="none"/>' +
+          '<path d="M 132 101 L 118 99 M 132 104 L 119 105 M 164 101 L 178 99 M 164 104 L 177 105" stroke="' + p.whisker + '" stroke-width="1" fill="none"/>' +
+        '</g>' +
+      '</g>' + zzzSVG();
+  }
+
+  function bichonSVG() {
+    var fur = "#fdfdfb", furDark = "#ece5da", ear = "#efe7da", belly = "#ffffff";
+    return floorSVG() +
+      '<g id="toy"><circle cx="0" cy="0" r="13" fill="#d96b5f"/>' +
+        '<path d="M -13 0 H 13 M 0 -13 V 13" stroke="#fff" stroke-width="2" opacity="0.65"/>' +
+        '<path d="M -9 -9 Q 0 0 9 9 M 9 -9 Q 0 0 -9 9" stroke="#b94f44" stroke-width="1.2" fill="none" opacity="0.5"/></g>' +
+      '<g id="dog">' +
+        '<path id="tail" d="M 208 116 Q 240 112 236 94 Q 233 82 222 88" stroke="' + furDark + '" stroke-width="14" fill="none" stroke-linecap="round"/>' +
+        '<ellipse cx="180" cy="120" rx="44" ry="32" fill="' + fur + '"/>' +
+        '<ellipse cx="162" cy="112" rx="22" ry="20" fill="' + fur + '"/>' +
+        '<ellipse cx="198" cy="114" rx="20" ry="18" fill="' + fur + '"/>' +
+        '<ellipse cx="180" cy="128" rx="30" ry="18" fill="' + belly + '"/>' +
+        '<g id="paws"><rect x="152" y="122" width="13" height="26" rx="6.5" fill="' + fur + '"/><rect x="170" y="126" width="13" height="24" rx="6.5" fill="' + furDark + '"/></g>' +
+        '<g id="head">' +
+          '<ellipse cx="146" cy="96" rx="31" ry="29" fill="' + fur + '"/>' +
+          '<ellipse cx="146" cy="78" rx="23" ry="15" fill="' + fur + '"/>' +
+          '<ellipse cx="118" cy="104" rx="13" ry="22" fill="' + ear + '"/>' +
+          '<ellipse cx="174" cy="104" rx="13" ry="22" fill="' + ear + '"/>' +
+          '<ellipse cx="124" cy="92" rx="11" ry="14" fill="' + fur + '"/>' +
+          '<ellipse cx="168" cy="92" rx="11" ry="14" fill="' + fur + '"/>' +
+          '<ellipse cx="146" cy="106" rx="21" ry="17" fill="' + belly + '"/>' +
+          '<g id="eyes"><circle cx="137" cy="94" r="3.6" fill="#34291f"/><circle cx="155" cy="94" r="3.6" fill="#34291f"/><circle cx="138" cy="93" r="1.1" fill="#fff"/><circle cx="156" cy="93" r="1.1" fill="#fff"/></g>' +
+          '<ellipse cx="146" cy="104" rx="5" ry="4" fill="#2c2420"/>' +
+          '<path d="M 146 108 Q 142 113 137 110 M 146 108 Q 150 113 155 110" stroke="#b8a89a" stroke-width="1.3" fill="none"/>' +
+        '</g>' +
+      '</g>' + zzzSVG();
+  }
+
+  function clockSVG() {
+    var ticks = "";
+    for (var i = 0; i < 12; i++) {
+      var a = (i / 12) * Math.PI * 2;
+      var x1 = 160 + Math.sin(a) * 68, y1 = 86 - Math.cos(a) * 68;
+      var x2 = 160 + Math.sin(a) * 62, y2 = 86 - Math.cos(a) * 62;
+      ticks += '<line x1="' + x1.toFixed(1) + '" y1="' + y1.toFixed(1) + '" x2="' + x2.toFixed(1) + '" y2="' + y2.toFixed(1) +
+        '" stroke="#cbb79b" stroke-width="' + (i % 3 === 0 ? 3 : 1.5) + '" stroke-linecap="round"/>';
+    }
+    return '<ellipse cx="160" cy="158" rx="120" ry="13" fill="#e3c79f" opacity="0.45"/>' +
+      '<circle cx="160" cy="86" r="76" fill="#fbf3e7" stroke="#e6dac9" stroke-width="3"/>' +
+      ticks +
+      '<circle cx="160" cy="86" r="' + CLOCK_R + '" fill="none" stroke="#ede3d3" stroke-width="10"/>' +
+      '<circle id="arc" cx="160" cy="86" r="' + CLOCK_R + '" fill="none" stroke="#d98e63" stroke-width="10" stroke-linecap="round"' +
+        ' transform="rotate(-90 160 86)" stroke-dasharray="' + CLOCK_C.toFixed(2) + '" stroke-dashoffset="0"/>' +
+      '<g id="needle"><line x1="160" y1="92" x2="160" y2="42" stroke="#c0764c" stroke-width="3.5" stroke-linecap="round"/></g>' +
+      '<circle cx="160" cy="86" r="20" fill="#e8503a"/>' +
+      '<path d="M 160 70 q 5 -8 11 -3 q -3 6 -8 6" fill="#7aa86a"/>' +
+      '<circle cx="160" cy="86" r="4.5" fill="#fff"/>' +
+      zzzSVG();
+  }
+
+  function sceneKind() { return data.settings.scene === "clock" ? "clock" : "creature"; }
+
+  function buildSceneSVG() {
+    var s = data.settings.scene, inner;
+    if (s === "clock") inner = clockSVG();
+    else if (s === "bichon") inner = bichonSVG();
+    else inner = catSVG(CAT_PALETTES[s] || CAT_PALETTES.cat);
+    return '<svg viewBox="0 0 320 175" xmlns="http://www.w3.org/2000/svg">' + inner + '</svg>';
+  }
+
+  var toy, tail, paws, head, zzz, arc, needle;
+  var animPlaying = false, animStart = 0, animFrame = null, blinkTimer = null;
+
+  function grabRefs() {
+    toy = $("toy"); tail = $("tail"); paws = $("paws"); head = $("head"); zzz = $("zzz");
+    arc = $("arc"); needle = $("needle");
+  }
+
+  function renderScene() {
+    clearInterval(blinkTimer);
+    if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
+    $("sceneStage").innerHTML = buildSceneSVG();
+    grabRefs();
+    if (running) setScenePlaying(true);
+    else drawSceneIdle();
+  }
+
+  function drawSceneIdle() {
+    if (sceneKind() === "clock") {
+      if (arc) arc.setAttribute("stroke-dashoffset", "0");
+      if (needle) needle.setAttribute("transform", "rotate(0 160 86)");
+    } else {
+      if (toy) toy.setAttribute("transform", "translate(110,135)");
+      if (paws) paws.setAttribute("transform", "translate(0,0)");
+      if (tail) tail.setAttribute("transform", "rotate(0 205 120)");
+      if (head) head.setAttribute("transform", "rotate(0 148 98)");
+      sleepyBlink();
+    }
+  }
+
+  function setScenePlaying(on) {
     animPlaying = on;
     if (on) {
-      zzz.setAttribute("opacity", "0");
+      clearInterval(blinkTimer);
+      if (zzz) zzz.setAttribute("opacity", "0");
       animStart = performance.now();
       if (!animFrame) animFrame = requestAnimationFrame(animLoop);
     } else {
       if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
-      toy.setAttribute("transform", "translate(110,135)");
-      paws.setAttribute("transform", "translate(0,0)");
-      tail.setAttribute("transform", "rotate(0 205 120)");
-      head.setAttribute("transform", "rotate(0 148 98)");
-      sleepyBlink();
+      drawSceneIdle();
     }
   }
+
   function animLoop(now) {
     var t = (now - animStart) / 1000;
-    var tx = 110 + Math.sin(t * 2.2) * 26;
-    var ty = 135 - Math.abs(Math.sin(t * 4.4)) * 30;
-    toy.setAttribute("transform", "translate(" + tx + "," + ty + ") rotate(" + (t * 220 % 360) + " 0 0)");
-    var pawY = Math.sin(t * 4.4) * -6;
-    paws.setAttribute("transform", "translate(0," + pawY + ")");
-    var tailA = Math.sin(t * 3) * 14;
-    tail.setAttribute("transform", "rotate(" + tailA + " 205 120)");
-    var headA = Math.sin(t * 2.2) * 6;
-    head.setAttribute("transform", "rotate(" + headA + " 148 98)");
+    if (sceneKind() === "clock") {
+      var frac = totalSeconds > 0 ? (1 - Math.max(0, remaining) / totalSeconds) : 0;
+      if (arc) arc.setAttribute("stroke-dashoffset", (CLOCK_C * frac).toFixed(2));
+      if (needle) needle.setAttribute("transform", "rotate(" + (frac * 360).toFixed(2) + " 160 86)");
+    } else {
+      var tx = 110 + Math.sin(t * 2.2) * 26;
+      var ty = 135 - Math.abs(Math.sin(t * 4.4)) * 30;
+      if (toy) toy.setAttribute("transform", "translate(" + tx + "," + ty + ") rotate(" + (t * 220 % 360) + " 0 0)");
+      if (paws) paws.setAttribute("transform", "translate(0," + (Math.sin(t * 4.4) * -6) + ")");
+      if (tail) tail.setAttribute("transform", "rotate(" + (Math.sin(t * 3) * 14) + " 205 120)");
+      if (head) head.setAttribute("transform", "rotate(" + (Math.sin(t * 2.2) * 6) + " 148 98)");
+    }
     if (animPlaying) animFrame = requestAnimationFrame(animLoop);
     else animFrame = null;
   }
-  var blinkTimer = null;
+
   function sleepyBlink() {
     clearInterval(blinkTimer);
+    if (!zzz) return;
     var zo = 0;
     blinkTimer = setInterval(function () {
       if (running) { clearInterval(blinkTimer); return; }
@@ -681,21 +1099,58 @@
     }, 1400);
   }
 
-  // ---------- cat meow (Web Audio synth) ----------
+  /* ---------- scene menu ---------- */
+  var sceneBtn = $("sceneBtn"), sceneMenu = $("sceneMenu");
+  function buildSceneMenu() {
+    sceneMenu.innerHTML = "";
+    SCENES.forEach(function (s) {
+      var b = document.createElement("button");
+      if (s.key === data.settings.scene) b.classList.add("active");
+      b.innerHTML = '<span class="em">' + s.em + '</span>' + s.label;
+      b.addEventListener("click", function () {
+        data.settings.scene = s.key; save();
+        buildSceneMenu();
+        renderScene();
+        sceneMenu.classList.remove("open");
+      });
+      sceneMenu.appendChild(b);
+    });
+  }
+  sceneBtn.addEventListener("click", function (e) {
+    e.stopPropagation();
+    sceneMenu.classList.toggle("open");
+  });
+  document.addEventListener("click", function (e) {
+    if (!sceneMenu.contains(e.target) && e.target !== sceneBtn) sceneMenu.classList.remove("open");
+  });
+
+  /* ====================================================
+     SOUNDS
+  ==================================================== */
   var audioCtx = null;
-  function playMeow() {
+  function ctx() {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    return audioCtx;
+  }
+
+  function playFinishSound() {
     try {
-      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
-      if (audioCtx.state === "suspended") audioCtx.resume();
-      meowOnce(0, 620, 480);
-      meowOnce(0.45, 700, 520);
+      var s = data.settings.scene;
+      if (s === "clock") playAlarm();
+      else if (s === "bichon") playBark();
+      else playMeow();
     } catch (e) {}
   }
-  function meowOnce(delay, f1, f2) {
-    var t0 = audioCtx.currentTime + delay;
-    var osc = audioCtx.createOscillator();
-    var gain = audioCtx.createGain();
-    var filter = audioCtx.createBiquadFilter();
+
+  function playMeow() {
+    var c = ctx();
+    meowOnce(c, 0, 620, 480);
+    meowOnce(c, 0.45, 700, 520);
+  }
+  function meowOnce(c, delay, f1, f2) {
+    var t0 = c.currentTime + delay;
+    var osc = c.createOscillator(), gain = c.createGain(), filter = c.createBiquadFilter();
     filter.type = "lowpass"; filter.frequency.value = 1600;
     osc.type = "sawtooth";
     osc.frequency.setValueAtTime(f1 * 0.8, t0);
@@ -705,24 +1160,104 @@
     gain.gain.linearRampToValueAtTime(0.22, t0 + 0.06);
     gain.gain.linearRampToValueAtTime(0.18, t0 + 0.28);
     gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.42);
-    osc.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination);
+    osc.connect(filter); filter.connect(gain); gain.connect(c.destination);
     osc.start(t0); osc.stop(t0 + 0.45);
   }
 
-  // ---------- tabs ----------
+  function playBark() {
+    var c = ctx();
+    barkOnce(c, 0, 320);
+    barkOnce(c, 0.28, 360);
+    barkOnce(c, 0.62, 300);
+  }
+  function barkOnce(c, delay, f) {
+    var t0 = c.currentTime + delay;
+    var osc = c.createOscillator(), gain = c.createGain(), filter = c.createBiquadFilter();
+    filter.type = "bandpass"; filter.frequency.value = 900; filter.Q.value = 0.8;
+    osc.type = "square";
+    osc.frequency.setValueAtTime(f * 1.4, t0);
+    osc.frequency.exponentialRampToValueAtTime(f * 0.7, t0 + 0.12);
+    gain.gain.setValueAtTime(0.0001, t0);
+    gain.gain.linearRampToValueAtTime(0.26, t0 + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.2);
+    osc.connect(filter); filter.connect(gain); gain.connect(c.destination);
+    osc.start(t0); osc.stop(t0 + 0.22);
+  }
+
+  function playAlarm() {
+    var c = ctx();
+    for (var i = 0; i < 8; i++) ringOnce(c, i * 0.16, i % 2 ? 1046 : 880);
+  }
+  function ringOnce(c, delay, f) {
+    var t0 = c.currentTime + delay;
+    var osc = c.createOscillator(), gain = c.createGain();
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(f, t0);
+    gain.gain.setValueAtTime(0.0001, t0);
+    gain.gain.linearRampToValueAtTime(0.2, t0 + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.14);
+    osc.connect(gain); gain.connect(c.destination);
+    osc.start(t0); osc.stop(t0 + 0.15);
+  }
+
+  /* ====================================================
+     TABS
+  ==================================================== */
   var tabBtns = document.querySelectorAll(".tabs button");
   tabBtns.forEach(function (b) {
     b.addEventListener("click", function () { switchScreen(b.dataset.screen); });
   });
   function switchScreen(name) {
     tabBtns.forEach(function (b) { b.classList.toggle("active", b.dataset.screen === name); });
-    ["pomo", "cal", "detail"].forEach(function (s) {
+    ["pomo", "music", "cal", "detail"].forEach(function (s) {
       $("screen-" + s).classList.toggle("active", s === name);
     });
     if (name === "cal") refreshCalendar();
+    if (name === "music") ensureMusic();
   }
 
-  // ---------- calendar ----------
+  /* ====================================================
+     MUSIC (webview)
+  ==================================================== */
+  var MUSIC_URLS = {
+    ytmusic: "https://music.youtube.com",
+    spotify: "https://open.spotify.com",
+    soundcloud: "https://soundcloud.com"
+  };
+  var musicFrame = $("musicFrame");
+  var musicView = null, musicLoaded = false;
+  var svcBtns = document.querySelectorAll(".music-bar .svc");
+
+  function ensureMusic() {
+    markSvc();
+    if (musicLoaded) return;
+    musicLoaded = true;
+    musicFrame.textContent = "";
+    musicView = document.createElement("webview");
+    musicView.setAttribute("partition", "persist:music");
+    musicView.setAttribute("allowpopups", "");
+    musicView.setAttribute("src", MUSIC_URLS[data.settings.music] || MUSIC_URLS.ytmusic);
+    musicFrame.appendChild(musicView);
+  }
+  function markSvc() {
+    svcBtns.forEach(function (b) { b.classList.toggle("active", b.dataset.svc === data.settings.music); });
+  }
+  function loadService(svc) {
+    data.settings.music = svc; save();
+    markSvc();
+    if (musicView) musicView.setAttribute("src", MUSIC_URLS[svc]);
+  }
+  svcBtns.forEach(function (b) {
+    b.addEventListener("click", function () { loadService(b.dataset.svc); });
+  });
+  $("mBack").addEventListener("click", function () { try { if (musicView && musicView.canGoBack()) musicView.goBack(); } catch (e) {} });
+  $("mReload").addEventListener("click", function () { try { if (musicView) musicView.reload(); } catch (e) {} });
+  $("mHome").addEventListener("click", function () { if (musicView) musicView.setAttribute("src", MUSIC_URLS[data.settings.music]); });
+  markSvc();
+
+  /* ====================================================
+     CALENDAR
+  ==================================================== */
   var calGrid = $("calGrid"), calTitle = $("calTitle");
   var viewYear, viewMonth;
   (function initView() { var n = new Date(); viewYear = n.getFullYear(); viewMonth = n.getMonth(); })();
@@ -780,8 +1315,14 @@
     viewMonth++; if (viewMonth > 11) { viewMonth = 0; viewYear++; } refreshCalendar();
   });
 
-  // ---------- detail ----------
+  /* ====================================================
+     DETAIL (+ delete record)
+  ==================================================== */
+  var currentDetailKey = null;
+  var deleteRecBtn = $("deleteRecBtn");
+
   function openDetail(key) {
+    currentDetailKey = key;
     switchScreen("detail");
     var parts = key.split("-");
     $("detailDate").textContent = parts[0] + "년 " + Number(parts[1]) + "월 " + Number(parts[2]) + "일";
@@ -792,10 +1333,12 @@
     $("statSessions").textContent = sessions;
     var list = $("doneList");
     list.innerHTML = "";
+    var hasRecord = !!rec && (tasks.length > 0 || sessions > 0);
+    deleteRecBtn.disabled = !hasRecord;
     if (tasks.length === 0) {
-      $("detailSub").textContent = "이 날은 완료한 기록이 없어요.";
+      $("detailSub").textContent = sessions > 0 ? ("완료 세션 " + sessions + "회") : "이 날은 완료한 기록이 없어요.";
       var note = document.createElement("div");
-      note.className = "empty-note"; note.textContent = "🌙 기록이 없는 날이에요";
+      note.className = "empty-note"; note.textContent = "🌙 완료한 태스크가 없는 날이에요";
       list.appendChild(note);
     } else {
       $("detailSub").textContent = "완료한 태스크 " + tasks.length + "개 · 세션 " + sessions + "회";
@@ -806,6 +1349,18 @@
       });
     }
   }
+
+  deleteRecBtn.addEventListener("click", function () {
+    if (!currentDetailKey || !data.records[currentDetailKey]) return;
+    if (!confirm("이 날의 완료 기록을 삭제할까요?\n(되돌릴 수 없어요)")) return;
+    delete data.records[currentDetailKey];
+    save();
+    refreshCalendar();
+    updateTodaySessions();
+    showToast("기록을 삭제했어요");
+    switchScreen("cal");
+  });
+
   $("backToCal").addEventListener("click", function () { switchScreen("cal"); });
 
   function escapeHtml(s) {
@@ -814,14 +1369,17 @@
     });
   }
 
-  // ---------- init ----------
+  /* ====================================================
+     INIT
+  ==================================================== */
   totalSeconds = Number(durSlider.value) * 60;
   remaining = totalSeconds;
-  durVal.textContent = durSlider.value + "분";
   renderTime();
-  renderTasks();
+  buildSceneMenu();
+  renderScene();
+  renderProjects();
+  updateCurrentTaskText();
   updateTodaySessions();
-  setCatPlaying(false);
   refreshCalendar();
 })();
 </script>

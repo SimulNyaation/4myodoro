@@ -1,8 +1,8 @@
 {
-  "name": "cozy-pomodoro",
-  "productName": "CozyPomodoro",
-  "version": "1.0.0",
-  "description": "고양이와 함께하는 코지 뽀모도로 & 태스크 데스크탑 앱",
+  "name": "4myo1dolldoll",
+  "productName": "4myo1dolldoll",
+  "version": "1.1.0",
+  "description": "고양이·강아지와 함께하는 뽀모도로 & 태스크 데스크탑 앱",
   "author": {
     "name": "기린",
     "email": "promptato@gmail.com"
@@ -16,6 +16,7 @@
     "build": "electron-builder",
     "build:win": "electron-builder --win",
     "build:portable": "electron-builder --win portable",
+    "publish": "electron-builder --win --publish always",
     "postinstall": "electron-builder install-app-deps"
   },
   "devDependencies": {
@@ -23,9 +24,12 @@
     "electron-builder": "^24.13.3",
     "png2icons": "^2.0.1"
   },
+  "dependencies": {
+    "electron-updater": "^6.8.9"
+  },
   "build": {
     "appId": "com.kirin.cozypomodoro",
-    "productName": "CozyPomodoro",
+    "productName": "4myo1dolldoll",
     "copyright": "© 2026 기린",
     "directories": {
       "output": "dist",
@@ -38,10 +42,27 @@
       "build/icon.ico",
       "package.json"
     ],
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "SimulNyaation",
+        "repo": "4myodoro"
+      }
+    ],
     "win": {
       "target": [
-        { "target": "nsis",     "arch": ["x64"] },
-        { "target": "portable", "arch": ["x64"] }
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
       ],
       "icon": "build/icon.ico",
       "artifactName": "${productName}-${version}-${arch}.${ext}"
@@ -52,15 +73,15 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "CozyPomodoro",
+      "shortcutName": "4myo1dolldoll",
       "installerIcon": "build/icon.ico",
       "uninstallerIcon": "build/icon.ico",
       "installerHeaderIcon": "build/icon.ico",
       "runAfterFinish": true,
-      "menuCategory": "CozyPomodoro"
+      "menuCategory": "4myo1dolldoll"
     },
     "portable": {
-      "artifactName": "CozyPomodoro-portable-${version}.exe"
+      "artifactName": "4myo1dolldoll-portable-${version}.exe"
     }
   }
 }
