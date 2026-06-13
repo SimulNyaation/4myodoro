@@ -126,12 +126,13 @@
   .scene-btn {
     position: absolute; top: 8px; right: 8px; z-index: 3;
     border: none; background: rgba(251,246,238,0.85); backdrop-filter: blur(4px);
-    border-radius: 10px; padding: 6px 10px; cursor: pointer;
-    font-size: 12px; font-weight: 600; color: var(--ink-soft);
-    font-family: inherit; box-shadow: 0 2px 6px var(--shadow);
+    border-radius: 10px; width: 32px; height: 32px; padding: 0; cursor: pointer;
+    color: var(--ink-soft); box-shadow: 0 2px 6px var(--shadow);
+    display: flex; align-items: center; justify-content: center;
     transition: color 0.15s, background 0.15s;
   }
   .scene-btn:hover { color: var(--accent-deep); background: var(--card); }
+  .scene-btn svg { display: block; }
 
   .scene-menu {
     position: absolute; top: 40px; right: 8px; z-index: 4;
@@ -417,7 +418,12 @@
   <section class="screen active" id="screen-pomo">
     <div class="card" id="pomoCard">
       <div class="scene">
-        <button class="scene-btn" id="sceneBtn">🎨 장면</button>
+        <button class="scene-btn" id="sceneBtn" title="타이머 스킨 변경" aria-label="타이머 스킨 변경">
+          <svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 3.5 a8.5 8.5 0 0 1 0 17 Z" fill="currentColor"/>
+          </svg>
+        </button>
         <div class="scene-menu" id="sceneMenu"></div>
         <div id="sceneStage"></div>
       </div>
