@@ -286,16 +286,24 @@
   }
   .music-tools button:hover { background: var(--bg); }
   .music-frame {
-    width: 100%; height: calc(100vh - 215px); min-height: 460px;
+    position: relative;
+    width: 100%; height: calc(100vh - 200px); min-height: 340px;
     border-radius: 14px; overflow: hidden;
     border: 1px solid var(--line); background: #fff;
     display: flex; align-items: center; justify-content: center;
     color: var(--ink-soft); font-size: 13px;
   }
-  .music-frame webview { width: 100%; height: 100%; border: 0; display: block; }
-  .music-note { font-size: 11.5px; color: var(--ink-soft); margin-top: 10px; line-height: 1.5; }
-  /* 음악 탭 카드는 여백을 줄여 브라우저 영역을 넓게 */
+  /* webview는 프레임을 절대위치로 가득 채움 (flex 가운데정렬에 영향 안 받게) */
+  .music-frame webview { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; display: block; }
+  .music-note { font-size: 11.5px; color: var(--ink-soft); margin-top: 8px; line-height: 1.4; }
   #screen-music .card { padding: 12px; }
+  /* 음악 탭: 헤더 숨기고 화면 높이를 flex로 가득 채워 브라우저를 길게 */
+  body.music-active { height: 100vh; overflow: hidden; }
+  body.music-active header { display: none; }
+  body.music-active .app { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
+  body.music-active #screen-music.active { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
+  body.music-active #screen-music .card { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
+  body.music-active .music-frame { flex: 1 1 auto; height: auto; min-height: 0; }
 
   /* ---- calendar ---- */
   .cal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
