@@ -21,7 +21,6 @@
 - 날짜 클릭 시 그날 완료한 태스크 상세 보기 + **기록 삭제** (수정은 불가, 삭제만)
 - 완료된 세션만 기록, 중도 정지는 기록하지 않음
 - 프레임리스 창 + 시스템 트레이 상주 + 항상 위에 표시 토글
-- **자동 업데이트**: 새 버전이 GitHub Releases에 올라오면 자동으로 내려받아 다음 실행 때 적용
 
 데이터는 앱 `localStorage`에 저장됩니다. (기존 CozyPomodoro 데이터는 처음 실행 시 자동 이전됩니다.)
 
@@ -47,22 +46,13 @@ npm run build:portable   # 포터블 단일 exe만
 
 > `appId`를 그대로 유지해, 기존 **CozyPomodoro 1.0.0** 설치본 위에 그대로 업그레이드 설치됩니다.
 
-## 자동 업데이트 배포 (GitHub Releases)
-앱은 `SimulNyaation/4myodoro` 저장소의 Releases를 업데이트 피드로 사용합니다.
-새 버전을 배포하려면:
+## 업데이트 배포 (수동)
+자동 업데이트는 사용하지 않고, 새 버전은 직접 나눠줍니다.
 
 1. `package.json`의 `version`을 올립니다 (예: `1.1.0` → `1.1.1`).
-2. GitHub 토큰을 환경변수로 지정합니다 (repo 권한 필요):
-   ```powershell
-   $env:GH_TOKEN = "<github personal access token>"
-   ```
-3. 빌드 + 게시:
-   ```bash
-   npm run publish
-   ```
-   electron-builder가 설치본과 `latest.yml`을 GitHub Release(draft)로 올립니다. Release를 publish하면 끝.
-
-> 자동 업데이트는 **1.1.0 이상**이 한 번 설치된 뒤부터 동작합니다. 기존 1.0.0(CozyPomodoro)에는 업데이터가 없으므로, 1.1.0 설치본을 한 번 수동으로 설치해야 합니다(기존 설치 위에 덮어쓰기 됨).
+2. `npm run build:win` 으로 설치본을 만듭니다.
+3. `dist/`의 새 `.exe`를 받는 사람에게 전달합니다.
+4. 받은 사람이 실행하면, `appId`가 같아 **기존 설치 위에 덮어쓰기 업그레이드**됩니다. (`localStorage` 데이터는 유지)
 
 ## 사용
 - 창 상단 바를 드래그해 이동, 우측 버튼으로 📌 항상 위 / 최소화 / 트레이로 숨기기

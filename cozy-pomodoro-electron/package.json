@@ -16,16 +16,12 @@
     "build": "electron-builder",
     "build:win": "electron-builder --win",
     "build:portable": "electron-builder --win portable",
-    "publish": "electron-builder --win --publish always",
     "postinstall": "electron-builder install-app-deps"
   },
   "devDependencies": {
     "electron": "^31.0.0",
     "electron-builder": "^24.13.3",
     "png2icons": "^2.0.1"
-  },
-  "dependencies": {
-    "electron-updater": "^6.8.9"
   },
   "build": {
     "appId": "com.kirin.cozypomodoro",
@@ -41,13 +37,6 @@
       "renderer/**/*",
       "build/icon.ico",
       "package.json"
-    ],
-    "publish": [
-      {
-        "provider": "github",
-        "owner": "SimulNyaation",
-        "repo": "4myodoro"
-      }
     ],
     "win": {
       "target": [

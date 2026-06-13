@@ -111,32 +111,6 @@ function rebuildTrayMenu() {
   tray.setContextMenu(menu);
 }
 
-/* ---------- 자동 업데이트 (electron-updater + GitHub Releases) ---------- */
-
-function sendUpdaterStatus(msg) {
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.webContents.send('updater:status', msg);
-  }
-}
-
-function setupAutoUpdate() {
-  // 패키징된 앱에서만 동작 (개발 모드에서는 건너뜀)
-  if (!app.isPackaged) return;
-  let autoUpdater;
-  try {
-    autoUpdater = require('electron-updater').autoUpdater;
-  } catch (e) {
-    return; // electron-updater 미설치 시 조용히 무시
-  }
-
-  autoUpdater.autoDownload = true;
-  autoUpdater.on('update-available', () => sendUpdaterStatus('새 버전을 내려받는 중…'));
-  autoUpdater.on('update-downloaded', () => sendUpdaterStatus('업데이트 준비 완료 · 다음 실행 때 적용돼요'));
-  autoUpdater.on('error', () => { /* 네트워크 문제 등은 조용히 무시 */ });
-
-  autoUpdater.checkForUpdatesAndNotify().catch(() => {});
-}
-
 /* ---------- 단일 인스턴스 ---------- */
 
 const gotLock = app.requestSingleInstanceLock();
@@ -156,7 +130,6 @@ if (!gotLock) {
 app.whenReady().then(() => {
   createWindow();
   createTray();
-  setupAutoUpdate();
 });
 
 app.on('window-all-closed', () => {

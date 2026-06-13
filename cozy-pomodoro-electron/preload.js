@@ -8,6 +8,4 @@ contextBridge.exposeInMainWorld('cozy', {
   hideToTray:        () => ipcRenderer.invoke('window:hideToTray'),
   toggleAlwaysOnTop: () => ipcRenderer.invoke('window:toggleAlwaysOnTop'),
   isAlwaysOnTop:     () => ipcRenderer.invoke('window:isAlwaysOnTop'),
-  // 자동 업데이트 상태 알림 (메인 → 렌더러)
-  onUpdaterStatus:   (cb) => ipcRenderer.on('updater:status', (_e, msg) => cb(msg)),
 });

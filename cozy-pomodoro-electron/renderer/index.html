@@ -510,9 +510,6 @@
     });
     minBtn.addEventListener("click", function () { window.cozy.minimize(); });
     closeBtn.addEventListener("click", function () { window.cozy.hideToTray(); });
-    if (window.cozy.onUpdaterStatus) {
-      window.cozy.onUpdaterStatus(function (msg) { showToast(msg); });
-    }
   }
 
   /* ---------- toast ---------- */
