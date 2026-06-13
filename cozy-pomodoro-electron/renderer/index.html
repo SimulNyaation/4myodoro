@@ -581,6 +581,7 @@
   function normalize(d) {
     if (!d.settings) d.settings = { scene: "cat", music: "ytmusic", minutes: 30 };
     if (!d.settings.scene) d.settings.scene = "cat";
+    if (["cat", "cat2", "bichon", "clock"].indexOf(d.settings.scene) === -1) d.settings.scene = "cat";
     if (!d.settings.music) d.settings.music = "ytmusic";
     if (!d.settings.minutes) d.settings.minutes = 30;
     if (!Array.isArray(d.projects) || !d.projects.length) {
@@ -965,19 +966,15 @@
      SCENES (6 variants)
   ==================================================== */
   var SCENES = [
-    { key: "cat",    em: "🐱", label: "기본 고양이" },
-    { key: "cat2",   em: "🧡", label: "치즈 고양이" },
-    { key: "cat3",   em: "🩶", label: "회색 고양이" },
-    { key: "cat4",   em: "🖤", label: "턱시도 고양이" },
-    { key: "bichon", em: "🐶", label: "비숑 강아지" },
-    { key: "clock",  em: "⏱", label: "디지털 타이머" }
+    { key: "cat",    em: "🐱", label: "도비" },
+    { key: "cat2",   em: "🧡", label: "레오" },
+    { key: "bichon", em: "🐶", label: "돌돌" },
+    { key: "clock",  em: "⏱", label: "뽀모도로" }
   ];
 
   var CAT_PALETTES = {
     cat:  { fur: "#a8917f", furDark: "#9a8576", belly: "#c4b1a1", earInner: "#e0b9a0", nose: "#d98e63", whisker: "#cdbcab", toy: "#d98e63", toyLine: "#b96f47", stripes: false },
-    cat2: { fur: "#e0a86a", furDark: "#cf8f4f", belly: "#f3dcb6", earInner: "#e8a98a", nose: "#c0764c", whisker: "#e6cda6", toy: "#7fa8c9", toyLine: "#5d86a6", stripes: true },
-    cat3: { fur: "#9aa0a6", furDark: "#7f868c", belly: "#c6cbcf", earInner: "#d8a9a9", nose: "#b08a8a", whisker: "#cdd2d6", toy: "#d98e63", toyLine: "#b96f47", stripes: true },
-    cat4: { fur: "#463f39", furDark: "#332e2a", belly: "#f4efe9", earInner: "#cf9a9a", nose: "#d98e63", whisker: "#b9a89a", toy: "#d98e63", toyLine: "#b96f47", stripes: false }
+    cat2: { fur: "#e0a86a", furDark: "#cf8f4f", belly: "#f3dcb6", earInner: "#e8a98a", nose: "#c0764c", whisker: "#e6cda6", toy: "#7fa8c9", toyLine: "#5d86a6", stripes: true }
   };
 
   var CLOCK_CX = 160, CLOCK_CY = 116, CLOCK_R = 96;
