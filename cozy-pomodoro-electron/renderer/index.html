@@ -212,21 +212,15 @@
     background: var(--card); margin-bottom: 6px;
     transition: opacity 0.45s ease, transform 0.3s ease;
   }
+  .task-item { cursor: pointer; transition: opacity 0.45s ease, transform 0.3s ease, background 0.18s ease, box-shadow 0.18s ease; }
   .task-item.dimmed { opacity: 0.28; }
   .task-item.removing { opacity: 0; transform: translateX(40px) scale(0.9); }
-  .task-item.focused { box-shadow: inset 3px 0 0 var(--accent); background: #fff7ee; }
+  .task-item.selected { background: #efdcc4; box-shadow: inset 0 0 0 1.6px var(--accent); }
+  .task-item.selected input[type="text"] { color: var(--accent-deep); font-weight: 600; }
 
-  .focus-dot {
-    -webkit-appearance: none; appearance: none; flex: none;
-    width: 16px; height: 16px; min-width: 16px; border-radius: 50%;
-    border: 2px solid var(--ink-soft); background: var(--card);
-    cursor: pointer; position: relative; transition: all 0.15s;
-  }
-  .focus-dot:hover { border-color: var(--accent); }
-  .focus-dot.on { border-color: var(--accent); }
-  .focus-dot.on::after {
-    content: ""; position: absolute; left: 3px; top: 3px;
-    width: 6px; height: 6px; border-radius: 50%; background: var(--accent);
+  .pj-name-static {
+    flex: 1; font-size: 15px; font-weight: 700; color: var(--ink); min-width: 0;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
 
   .task-item input[type="checkbox"] {
@@ -290,7 +284,8 @@
   }
   .music-tools button:hover { background: var(--bg); }
   .music-frame {
-    width: 100%; height: 560px; border-radius: 14px; overflow: hidden;
+    width: 100%; height: calc(100vh - 215px); min-height: 460px;
+    border-radius: 14px; overflow: hidden;
     border: 1px solid var(--line); background: #fff;
     display: flex; align-items: center; justify-content: center;
     color: var(--ink-soft); font-size: 13px;
@@ -337,8 +332,11 @@
   .done-list li {
     display: flex; align-items: center; gap: 10px; padding: 12px;
     background: var(--bg-soft); border-radius: 12px; margin-bottom: 8px; font-size: 14px;
+    transition: background 0.15s;
   }
   .done-list li .check { color: var(--green-4); font-weight: 700; }
+  .done-list li .txt { flex: 1; }
+  .done-list li .icon-btn.del { font-size: 15px; }
   .empty-note { text-align: center; color: var(--ink-soft); font-size: 14px; padding: 30px 0; }
   .back-btn {
     border: none; background: var(--bg-soft); padding: 9px 14px; border-radius: 10px;
@@ -351,12 +349,14 @@
   }
   .delete-rec-btn:hover { background: #f6e0d8; }
   .delete-rec-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .delete-rec-btn.active { background: var(--bg-soft); color: var(--ink); border-color: var(--line); }
 
   .running-mode .config-zone { display: none; }
-  .running-mode .current-task-pill { display: block; }
-  .running-mode .focus-dot,
   .running-mode .icon-btn,
   .running-mode .add-btn { display: none; }
+
+  /* 디지털 타이머 장면: 외부 큰 시계 숫자는 숨기고 장치 안 숫자만 사용 */
+  .digital-mode .timer-display .time { display: none; }
 
   /* update toast */
   .toast {
@@ -438,20 +438,14 @@
   <!-- ============ MUSIC ============ -->
   <section class="screen" id="screen-music">
     <div class="card">
-      <div class="music-bar">
-        <button class="svc" data-svc="ytmusic">YouTube Music</button>
-        <button class="svc" data-svc="spotify">Spotify</button>
-        <button class="svc" data-svc="soundcloud">SoundCloud</button>
-      </div>
       <div class="music-tools">
         <button id="mBack" title="뒤로">‹ 뒤로</button>
         <button id="mReload" title="새로고침">↻ 새로고침</button>
-        <button id="mHome" title="홈">⌂ 홈</button>
+        <button id="mHome" title="홈">⌂ YouTube Music</button>
       </div>
       <div class="music-frame" id="musicFrame">불러오는 중…</div>
       <p class="music-note">
-        내 계정으로 로그인하면 다음에도 유지됩니다. 친구는 Spotify·SoundCloud로도 자유롭게 들을 수 있어요.<br>
-        ⚠ Spotify는 보호된 스트리밍(Widevine) 특성상 일부 환경에서 재생이 제한될 수 있어요. 그럴 땐 YouTube Music / SoundCloud를 이용하세요.
+        YouTube Music을 모바일(세로) 화면으로 띄워 앱 폭에 맞췄어요. 처음 한 번 로그인하면 계정이 유지됩니다.
       </p>
     </div>
   </section>
@@ -488,7 +482,7 @@
         <div class="stat-box"><div class="num" id="statSessions">0</div><div class="lbl">완료 세션</div></div>
       </div>
       <ul class="done-list" id="doneList"></ul>
-      <button class="delete-rec-btn" id="deleteRecBtn" disabled>🗑 이 날 기록 삭제</button>
+      <button class="delete-rec-btn" id="deleteRecBtn" disabled>🗑 선택한 태스크 삭제</button>
     </div>
   </section>
 </div>
@@ -599,6 +593,7 @@
   var timeText = $("timeText"), stateLabel = $("stateLabel");
   var startBtn = $("startBtn"), pauseBtn = $("pauseBtn"), stopBtn = $("stopBtn");
   var pomoCard = $("pomoCard");
+  var currentTaskPill = $("currentTaskPill");
   var currentTaskText = $("currentTaskText");
   var todaySessionsEl = $("todaySessions");
 
@@ -639,6 +634,11 @@
 
   function renderProjects() {
     projectListEl.innerHTML = "";
+
+    // 집중 중에는 선택한 프로젝트의 선택한 태스크 하나만 표시
+    if (running) { renderRunningTask(); return; }
+
+    currentTaskPill.style.display = "none";
     data.projects.forEach(function (proj) {
       var box = document.createElement("div");
       box.className = "project";
@@ -650,7 +650,6 @@
       var name = document.createElement("input");
       name.className = "pj-name"; name.type = "text"; name.value = proj.name;
       name.placeholder = "프로젝트 이름";
-      name.readOnly = running;
       name.addEventListener("input", function () { proj.name = name.value; save(); });
       var pdel = document.createElement("button");
       pdel.className = "icon-btn del"; pdel.title = "프로젝트 삭제"; pdel.textContent = "✕";
@@ -677,8 +676,36 @@
     addProjectBtn.disabled = data.projects.length >= MAX_PROJECTS;
     addProjectBtn.textContent = data.projects.length >= MAX_PROJECTS
       ? "프로젝트는 최대 " + MAX_PROJECTS + "개" : "＋ 프로젝트 추가";
+  }
 
-    applyDimming();
+  function renderRunningTask() {
+    var hit = findTask(getFocusRef());
+    if (!hit) {
+      currentTaskPill.style.display = "block";
+      currentTaskText.textContent = "모든 태스크 완료! 🎉";
+      return;
+    }
+    currentTaskPill.style.display = "none";
+
+    var box = document.createElement("div");
+    box.className = "project";
+    var head = document.createElement("div");
+    head.className = "project-head";
+    var dot = document.createElement("span");
+    dot.className = "pj-dot"; dot.textContent = "📂";
+    var nm = document.createElement("span");
+    nm.className = "pj-name-static";
+    nm.textContent = hit.project.name || "프로젝트";
+    head.appendChild(dot); head.appendChild(nm);
+    box.appendChild(head);
+
+    var ul = document.createElement("ul");
+    ul.className = "subtask-list";
+    var li = buildTaskRow(hit.project, hit.task);
+    li.classList.add("selected");
+    ul.appendChild(li);
+    box.appendChild(ul);
+    projectListEl.appendChild(box);
   }
 
   function buildTaskRow(proj, task) {
@@ -687,21 +714,12 @@
     li.dataset.pid = proj.id;
     li.dataset.tid = task.id;
 
-    var fdot = document.createElement("button");
-    fdot.className = "focus-dot";
-    fdot.title = "이 일에 집중";
     var ref = getFocusRef();
-    if (ref && ref.projectId === proj.id && ref.taskId === task.id) {
-      fdot.classList.add("on"); li.classList.add("focused");
-    }
-    fdot.addEventListener("click", function () {
-      if (running) return;
-      data.selected = { projectId: proj.id, taskId: task.id };
-      save(); renderProjects(); updateCurrentTaskText();
-    });
+    if (ref && ref.projectId === proj.id && ref.taskId === task.id) li.classList.add("selected");
 
     var cb = document.createElement("input");
     cb.type = "checkbox";
+    cb.addEventListener("click", function (e) { e.stopPropagation(); });
     cb.addEventListener("change", function () {
       if (cb.checked) completeTask(proj.id, task.id, li);
     });
@@ -717,20 +735,29 @@
 
     var tdel = document.createElement("button");
     tdel.className = "icon-btn del"; tdel.title = "삭제"; tdel.textContent = "✕";
-    tdel.addEventListener("click", function () { deleteTask(proj.id, task.id); });
+    tdel.addEventListener("click", function (e) { e.stopPropagation(); deleteTask(proj.id, task.id); });
 
-    li.appendChild(fdot); li.appendChild(cb); li.appendChild(tx); li.appendChild(tdel);
+    // 행 클릭 → 집중 대상 선택 (편집 포커스 유지 위해 전체 재렌더 없이 클래스만 갱신)
+    li.addEventListener("click", function () { selectFocus(proj.id, task.id); });
+
+    li.appendChild(cb); li.appendChild(tx); li.appendChild(tdel);
     return li;
   }
 
-  function applyDimming() {
-    var items = projectListEl.querySelectorAll(".task-item");
-    var focus = getFocusRef();
-    items.forEach(function (li) {
-      var isFocus = focus && li.dataset.pid === focus.projectId && li.dataset.tid === focus.taskId;
-      if (running && !isFocus) li.classList.add("dimmed");
-      else li.classList.remove("dimmed");
+  function setSelectedClasses() {
+    var ref = getFocusRef();
+    projectListEl.querySelectorAll(".task-item").forEach(function (li) {
+      li.classList.toggle("selected",
+        !!ref && li.dataset.pid === ref.projectId && li.dataset.tid === ref.taskId);
     });
+  }
+
+  function selectFocus(pid, tid) {
+    if (running) return;
+    data.selected = { projectId: pid, taskId: tid };
+    save();
+    setSelectedClasses();
+    updateCurrentTaskText();
   }
 
   function addProject() {
@@ -784,7 +811,7 @@
       if (data.selected && data.selected.taskId === taskId) data.selected = null;
       save();
       renderProjects();
-      if (running) { updateCurrentTaskText(); applyDimming(); }
+      if (running) updateCurrentTaskText();
     }, 450);
     refreshCalendar();
   }
@@ -813,11 +840,14 @@
   var endTime = 0;
   var tickInterval = null;
 
+  function fmt(sec) {
+    var s = Math.max(0, Math.round(sec));
+    return String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0");
+  }
   function renderTime() {
-    var s = Math.max(0, Math.round(remaining));
-    var mm = String(Math.floor(s / 60)).padStart(2, "0");
-    var ss = String(s % 60).padStart(2, "0");
-    timeText.textContent = mm + ":" + ss;
+    var txt = fmt(remaining);
+    timeText.textContent = txt;
+    if (digTime) digTime.textContent = txt;
   }
 
   function startTimer() {
@@ -913,7 +943,7 @@
     { key: "cat3",   em: "🩶", label: "회색 고양이" },
     { key: "cat4",   em: "🖤", label: "턱시도 고양이" },
     { key: "bichon", em: "🐶", label: "비숑 강아지" },
-    { key: "clock",  em: "⏰", label: "뽀모도로 시계" }
+    { key: "clock",  em: "⏱", label: "디지털 타이머" }
   ];
 
   var CAT_PALETTES = {
@@ -923,7 +953,7 @@
     cat4: { fur: "#463f39", furDark: "#332e2a", belly: "#f4efe9", earInner: "#cf9a9a", nose: "#d98e63", whisker: "#b9a89a", toy: "#d98e63", toyLine: "#b96f47", stripes: false }
   };
 
-  var CLOCK_R = 60;
+  var CLOCK_CX = 160, CLOCK_CY = 116, CLOCK_R = 96;
   var CLOCK_C = 2 * Math.PI * CLOCK_R;
 
   function floorSVG() {
@@ -993,25 +1023,23 @@
   }
 
   function clockSVG() {
-    var ticks = "";
-    for (var i = 0; i < 12; i++) {
-      var a = (i / 12) * Math.PI * 2;
-      var x1 = 160 + Math.sin(a) * 68, y1 = 86 - Math.cos(a) * 68;
-      var x2 = 160 + Math.sin(a) * 62, y2 = 86 - Math.cos(a) * 62;
-      ticks += '<line x1="' + x1.toFixed(1) + '" y1="' + y1.toFixed(1) + '" x2="' + x2.toFixed(1) + '" y2="' + y2.toFixed(1) +
-        '" stroke="#cbb79b" stroke-width="' + (i % 3 === 0 ? 3 : 1.5) + '" stroke-linecap="round"/>';
-    }
-    return '<ellipse cx="160" cy="158" rx="120" ry="13" fill="#e3c79f" opacity="0.45"/>' +
-      '<circle cx="160" cy="86" r="76" fill="#fbf3e7" stroke="#e6dac9" stroke-width="3"/>' +
-      ticks +
-      '<circle cx="160" cy="86" r="' + CLOCK_R + '" fill="none" stroke="#ede3d3" stroke-width="10"/>' +
-      '<circle id="arc" cx="160" cy="86" r="' + CLOCK_R + '" fill="none" stroke="#d98e63" stroke-width="10" stroke-linecap="round"' +
-        ' transform="rotate(-90 160 86)" stroke-dasharray="' + CLOCK_C.toFixed(2) + '" stroke-dashoffset="0"/>' +
-      '<g id="needle"><line x1="160" y1="92" x2="160" y2="42" stroke="#c0764c" stroke-width="3.5" stroke-linecap="round"/></g>' +
-      '<circle cx="160" cy="86" r="20" fill="#e8503a"/>' +
-      '<path d="M 160 70 q 5 -8 11 -3 q -3 6 -8 6" fill="#7aa86a"/>' +
-      '<circle cx="160" cy="86" r="4.5" fill="#fff"/>' +
-      zzzSVG();
+    var cx = CLOCK_CX, cy = CLOCK_CY, r = CLOCK_R, C = CLOCK_C;
+    return '<defs>' +
+        '<linearGradient id="arcg" x1="0" y1="0" x2="1" y2="1">' +
+          '<stop offset="0" stop-color="#e9b074"/><stop offset="1" stop-color="#c0764c"/></linearGradient>' +
+      '</defs>' +
+      // 잔잔한 베이스 트랙
+      '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="#ece0cd" stroke-width="12"/>' +
+      // 남은 시간 진행 아크 (위에서 시작해 시계방향으로 줄어듦)
+      '<circle id="arc" cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="url(#arcg)" ' +
+        'stroke-width="12" stroke-linecap="round" transform="rotate(-90 ' + cx + ' ' + cy + ')" ' +
+        'stroke-dasharray="' + C.toFixed(2) + '" stroke-dashoffset="0"/>' +
+      // 진행 끝 점
+      '<circle id="arcDot" cx="' + cx + '" cy="' + (cy - r) + '" r="7" fill="#c0764c"/>' +
+      // 중앙 디지털 시간
+      '<text id="digTime" x="' + cx + '" y="' + (cy + 17) + '" font-size="52" fill="#5a4a3a" text-anchor="middle" ' +
+        'font-family="Consolas, Menlo, monospace" font-weight="700" letter-spacing="1">30:00</text>' +
+      '<text id="zzz" x="0" y="0" opacity="0"></text>';
   }
 
   function sceneKind() { return data.settings.scene === "clock" ? "clock" : "creature"; }
@@ -1021,21 +1049,34 @@
     if (s === "clock") inner = clockSVG();
     else if (s === "bichon") inner = bichonSVG();
     else inner = catSVG(CAT_PALETTES[s] || CAT_PALETTES.cat);
-    return '<svg viewBox="0 0 320 175" xmlns="http://www.w3.org/2000/svg">' + inner + '</svg>';
+    var vb = (s === "clock") ? "0 0 320 232" : "0 0 320 175";
+    return '<svg viewBox="' + vb + '" xmlns="http://www.w3.org/2000/svg">' + inner + '</svg>';
   }
 
-  var toy, tail, paws, head, zzz, arc, needle;
+  var toy, tail, paws, head, zzz, digTime, arc, arcDot;
   var animPlaying = false, animStart = 0, animFrame = null, blinkTimer = null;
 
   function grabRefs() {
     toy = $("toy"); tail = $("tail"); paws = $("paws"); head = $("head"); zzz = $("zzz");
-    arc = $("arc"); needle = $("needle");
+    digTime = $("digTime"); arc = $("arc"); arcDot = $("arcDot");
+  }
+
+  function setClockProgress(fracRemaining) {
+    var f = Math.max(0, Math.min(1, fracRemaining));
+    if (arc) arc.setAttribute("stroke-dashoffset", (CLOCK_C * (1 - f)).toFixed(2));
+    if (arcDot) {
+      var ang = (-90 + 360 * f) * Math.PI / 180;
+      arcDot.setAttribute("cx", (CLOCK_CX + CLOCK_R * Math.cos(ang)).toFixed(2));
+      arcDot.setAttribute("cy", (CLOCK_CY + CLOCK_R * Math.sin(ang)).toFixed(2));
+      arcDot.setAttribute("opacity", f > 0.001 ? "1" : "0");
+    }
   }
 
   function renderScene() {
     clearInterval(blinkTimer);
     if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
     $("sceneStage").innerHTML = buildSceneSVG();
+    pomoCard.classList.toggle("digital-mode", sceneKind() === "clock");
     grabRefs();
     if (running) setScenePlaying(true);
     else drawSceneIdle();
@@ -1043,8 +1084,8 @@
 
   function drawSceneIdle() {
     if (sceneKind() === "clock") {
-      if (arc) arc.setAttribute("stroke-dashoffset", "0");
-      if (needle) needle.setAttribute("transform", "rotate(0 160 86)");
+      setClockProgress(1);
+      if (digTime) digTime.textContent = fmt(remaining);
     } else {
       if (toy) toy.setAttribute("transform", "translate(110,135)");
       if (paws) paws.setAttribute("transform", "translate(0,0)");
@@ -1070,9 +1111,8 @@
   function animLoop(now) {
     var t = (now - animStart) / 1000;
     if (sceneKind() === "clock") {
-      var frac = totalSeconds > 0 ? (1 - Math.max(0, remaining) / totalSeconds) : 0;
-      if (arc) arc.setAttribute("stroke-dashoffset", (CLOCK_C * frac).toFixed(2));
-      if (needle) needle.setAttribute("transform", "rotate(" + (frac * 360).toFixed(2) + " 160 86)");
+      var fracR = totalSeconds > 0 ? Math.max(0, remaining) / totalSeconds : 0;
+      setClockProgress(fracR);
     } else {
       var tx = 110 + Math.sin(t * 2.2) * 26;
       var ty = 135 - Math.abs(Math.sin(t * 4.4)) * 30;
@@ -1214,43 +1254,27 @@
   }
 
   /* ====================================================
-     MUSIC (webview)
+     MUSIC (webview) — YouTube Music, 모바일 UA로 세로 레이아웃
   ==================================================== */
-  var MUSIC_URLS = {
-    ytmusic: "https://music.youtube.com",
-    spotify: "https://open.spotify.com",
-    soundcloud: "https://soundcloud.com"
-  };
+  var YT_MUSIC = "https://music.youtube.com";
+  var MOBILE_UA = "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36";
   var musicFrame = $("musicFrame");
   var musicView = null, musicLoaded = false;
-  var svcBtns = document.querySelectorAll(".music-bar .svc");
 
   function ensureMusic() {
-    markSvc();
     if (musicLoaded) return;
     musicLoaded = true;
     musicFrame.textContent = "";
     musicView = document.createElement("webview");
     musicView.setAttribute("partition", "persist:music");
     musicView.setAttribute("allowpopups", "");
-    musicView.setAttribute("src", MUSIC_URLS[data.settings.music] || MUSIC_URLS.ytmusic);
+    musicView.setAttribute("useragent", MOBILE_UA);
+    musicView.setAttribute("src", YT_MUSIC);
     musicFrame.appendChild(musicView);
   }
-  function markSvc() {
-    svcBtns.forEach(function (b) { b.classList.toggle("active", b.dataset.svc === data.settings.music); });
-  }
-  function loadService(svc) {
-    data.settings.music = svc; save();
-    markSvc();
-    if (musicView) musicView.setAttribute("src", MUSIC_URLS[svc]);
-  }
-  svcBtns.forEach(function (b) {
-    b.addEventListener("click", function () { loadService(b.dataset.svc); });
-  });
   $("mBack").addEventListener("click", function () { try { if (musicView && musicView.canGoBack()) musicView.goBack(); } catch (e) {} });
   $("mReload").addEventListener("click", function () { try { if (musicView) musicView.reload(); } catch (e) {} });
-  $("mHome").addEventListener("click", function () { if (musicView) musicView.setAttribute("src", MUSIC_URLS[data.settings.music]); });
-  markSvc();
+  $("mHome").addEventListener("click", function () { if (musicView) musicView.setAttribute("src", YT_MUSIC); });
 
   /* ====================================================
      CALENDAR
@@ -1316,46 +1340,80 @@
      DETAIL (+ delete record)
   ==================================================== */
   var currentDetailKey = null;
+  var detailDeleteMode = false;
   var deleteRecBtn = $("deleteRecBtn");
 
   function openDetail(key) {
     currentDetailKey = key;
+    detailDeleteMode = false;
     switchScreen("detail");
     var parts = key.split("-");
     $("detailDate").textContent = parts[0] + "년 " + Number(parts[1]) + "월 " + Number(parts[2]) + "일";
-    var rec = data.records[key];
+    renderDetail();
+  }
+
+  function renderDetail() {
+    var rec = data.records[currentDetailKey];
     var tasks = rec ? rec.tasks : [];
     var sessions = rec ? rec.sessions : 0;
     $("statTasks").textContent = tasks.length;
     $("statSessions").textContent = sessions;
     var list = $("doneList");
     list.innerHTML = "";
-    var hasRecord = !!rec && (tasks.length > 0 || sessions > 0);
-    deleteRecBtn.disabled = !hasRecord;
+
     if (tasks.length === 0) {
       $("detailSub").textContent = sessions > 0 ? ("완료 세션 " + sessions + "회") : "이 날은 완료한 기록이 없어요.";
+      deleteRecBtn.style.display = "none";
+      detailDeleteMode = false;
       var note = document.createElement("div");
       note.className = "empty-note"; note.textContent = "🌙 완료한 태스크가 없는 날이에요";
       list.appendChild(note);
-    } else {
-      $("detailSub").textContent = "완료한 태스크 " + tasks.length + "개 · 세션 " + sessions + "회";
-      tasks.forEach(function (t) {
-        var li = document.createElement("li");
-        li.innerHTML = '<span class="check">✓</span>' + escapeHtml(t);
-        list.appendChild(li);
-      });
+      return;
     }
+
+    deleteRecBtn.style.display = "";
+    deleteRecBtn.disabled = false;
+    deleteRecBtn.textContent = detailDeleteMode ? "완료" : "🗑 삭제";
+    deleteRecBtn.classList.toggle("active", detailDeleteMode);
+    $("detailSub").textContent = detailDeleteMode
+      ? "지울 태스크의 🗑 아이콘을 누르세요"
+      : "완료한 태스크 " + tasks.length + "개 · 세션 " + sessions + "회";
+
+    tasks.forEach(function (t, idx) {
+      var li = document.createElement("li");
+      var check = document.createElement("span");
+      check.className = "check"; check.textContent = "✓";
+      var span = document.createElement("span");
+      span.className = "txt"; span.textContent = t;
+      li.appendChild(check); li.appendChild(span);
+      if (detailDeleteMode) {
+        var del = document.createElement("button");
+        del.className = "icon-btn del"; del.title = "이 태스크 삭제"; del.textContent = "🗑";
+        del.addEventListener("click", function () { deleteRecordTask(idx); });
+        li.appendChild(del);
+      }
+      list.appendChild(li);
+    });
   }
 
-  deleteRecBtn.addEventListener("click", function () {
-    if (!currentDetailKey || !data.records[currentDetailKey]) return;
-    if (!confirm("이 날의 완료 기록을 삭제할까요?\n(되돌릴 수 없어요)")) return;
-    delete data.records[currentDetailKey];
+  function deleteRecordTask(idx) {
+    var rec = data.records[currentDetailKey];
+    if (!rec) return;
+    rec.tasks.splice(idx, 1);
+    if (rec.tasks.length === 0 && rec.sessions === 0) delete data.records[currentDetailKey];
     save();
     refreshCalendar();
     updateTodaySessions();
     showToast("기록을 삭제했어요");
-    switchScreen("cal");
+    if (data.records[currentDetailKey]) renderDetail();
+    else switchScreen("cal");
+  }
+
+  deleteRecBtn.addEventListener("click", function () {
+    var rec = data.records[currentDetailKey];
+    if (!rec || !rec.tasks.length) return;
+    detailDeleteMode = !detailDeleteMode;
+    renderDetail();
   });
 
   $("backToCal").addEventListener("click", function () { switchScreen("cal"); });
