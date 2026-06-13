@@ -3,14 +3,17 @@
  * Electron 메인 프로세스
  */
 
-const { app, BrowserWindow, Tray, Menu, ipcMain, nativeImage } = require('electron');
+const { app, BrowserWindow, WebContentsView, Tray, Menu, ipcMain, nativeImage } = require('electron');
 const path = require('path');
 
 const APP_NAME = '4myo1dolldoll';
+const MUSIC_URL = 'https://music.youtube.com';
 
 let mainWindow = null;
 let tray = null;
 let isQuitting = false;
+let musicView = null;
+let musicLoaded = false;
 
 /* ---------- IPC: 윈도우 컨트롤 ---------- */
 
@@ -32,6 +35,48 @@ ipcMain.handle('window:toggleAlwaysOnTop', () => {
 
 ipcMain.handle('window:isAlwaysOnTop', () => {
   return mainWindow ? mainWindow.isAlwaysOnTop() : false;
+});
+
+/* ---------- 음악: WebContentsView (메인이 크기를 직접 제어 → webview 뷰포트 버그 회피) ---------- */
+
+function getMusicView() {
+  if (musicView || !mainWindow) return musicView;
+  musicView = new WebContentsView({
+    webPreferences: { partition: 'persist:music' },
+  });
+  // 로그인 팝업 등은 기본 창으로 허용
+  musicView.webContents.setWindowOpenHandler(() => ({ action: 'allow' }));
+  mainWindow.contentView.addChildView(musicView);
+  musicView.setVisible(false);
+  return musicView;
+}
+
+function setMusicBounds(rect) {
+  if (!musicView || !rect) return;
+  musicView.setBounds({
+    x: Math.round(rect.x), y: Math.round(rect.y),
+    width: Math.round(rect.width), height: Math.round(rect.height),
+  });
+}
+
+ipcMain.handle('music:show', (e, rect) => {
+  const v = getMusicView();
+  if (!v) return;
+  setMusicBounds(rect);
+  v.setVisible(true);
+  if (!musicLoaded) { musicLoaded = true; v.webContents.loadURL(MUSIC_URL); }
+});
+
+ipcMain.handle('music:hide', () => { if (musicView) musicView.setVisible(false); });
+ipcMain.handle('music:bounds', (e, rect) => setMusicBounds(rect));
+ipcMain.handle('music:reload', () => { if (musicView) musicView.webContents.reload(); });
+ipcMain.handle('music:home', () => { if (musicView) musicView.webContents.loadURL(MUSIC_URL); });
+ipcMain.handle('music:back', () => {
+  if (!musicView) return;
+  const wc = musicView.webContents;
+  const nh = wc.navigationHistory;
+  if (nh && nh.canGoBack()) nh.goBack();
+  else if (wc.canGoBack && wc.canGoBack()) wc.goBack();
 });
 
 /* ---------- 윈도우 ---------- */
@@ -56,7 +101,6 @@ function createWindow() {
       nodeIntegration: false,
       sandbox: false,
       backgroundThrottling: false, // 타이머가 백그라운드에서도 정확히 흐르도록
-      webviewTag: true,            // 음악 탭(YouTube Music/Spotify/SoundCloud)용 <webview>
     },
   });
 

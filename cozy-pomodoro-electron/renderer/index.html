@@ -286,15 +286,13 @@
   }
   .music-tools button:hover { background: var(--bg); }
   .music-frame {
-    position: relative;
     width: 100%; min-height: 320px;   /* 실제 높이는 JS(sizeMusic)가 창에 맞춰 px로 지정 */
     border-radius: 14px; overflow: hidden;
     border: 1px solid var(--line); background: #fff;
-    display: flex; align-items: center; justify-content: center;
     color: var(--ink-soft); font-size: 13px;
   }
-  /* webview는 프레임을 절대위치로 가득 채움 (프레임 높이는 JS가 확정) */
-  .music-frame webview { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; display: block; }
+  /* webview 높이는 JS(sizeMusic)가 px로 직접 지정 — % / flex 의존 안 함 */
+  .music-frame webview { display: block; width: 100%; height: 100%; border: 0; }
   .music-note { font-size: 11.5px; color: var(--ink-soft); margin: 0 0 8px; line-height: 1.4; }
   #screen-music .card { padding: 12px; }
   /* 음악 탭: 헤더 숨겨 세로 공간 확보 + 폭 제한 해제 */
@@ -1258,39 +1256,42 @@
     });
     document.body.classList.toggle("music-active", name === "music");
     if (name === "cal") refreshCalendar();
-    if (name === "music") { ensureMusic(); requestAnimationFrame(sizeMusic); }
+    if (name === "music") { sizeMusic(); requestAnimationFrame(showMusic); }
+    else hideMusic();
   }
 
   /* ====================================================
-     MUSIC (webview) — YouTube Music (데스크탑 레이아웃, 창 폭 가득)
+     MUSIC — 메인 프로세스의 WebContentsView를 영역에 맞춰 표시
+     (<webview> 게스트 뷰포트가 150px에 고정되는 문제를 피함)
   ==================================================== */
-  var YT_MUSIC = "https://music.youtube.com";
   var musicFrame = $("musicFrame");
-  var musicView = null, musicLoaded = false;
+  var hasMusic = !!(window.cozy && window.cozy.music);
 
-  function ensureMusic() {
-    if (musicLoaded) return;
-    musicLoaded = true;
-    musicFrame.textContent = "";
-    musicView = document.createElement("webview");
-    musicView.setAttribute("partition", "persist:music");
-    musicView.setAttribute("allowpopups", "");
-    musicView.setAttribute("src", YT_MUSIC);
-    musicFrame.appendChild(musicView);
-    requestAnimationFrame(sizeMusic);
+  function musicRect() {
+    var r = musicFrame.getBoundingClientRect();
+    return { x: r.left, y: r.top, width: r.width, height: r.height };
   }
 
-  // 음악 탭 브라우저 높이를 창 하단까지 정확히 채움 (resize에도 반응)
+  // 음악 프레임(자리표시) 높이를 창 하단까지 채우도록 px로 지정
   function sizeMusic() {
     if (!$("screen-music").classList.contains("active")) return;
     var top = musicFrame.getBoundingClientRect().top;
-    var h = window.innerHeight - top - 12;
-    musicFrame.style.height = Math.max(280, h) + "px";
+    var h = Math.max(280, Math.round(window.innerHeight - top - 12));
+    musicFrame.style.height = h + "px";
+    if (hasMusic) window.cozy.music.setBounds(musicRect());
   }
+
+  function showMusic() {
+    if (!hasMusic) { musicFrame.textContent = "음악은 앱에서만 재생됩니다."; return; }
+    musicFrame.textContent = "";
+    window.cozy.music.show(musicRect());
+  }
+  function hideMusic() { if (hasMusic) window.cozy.music.hide(); }
+
   window.addEventListener("resize", sizeMusic);
-  $("mBack").addEventListener("click", function () { try { if (musicView && musicView.canGoBack()) musicView.goBack(); } catch (e) {} });
-  $("mReload").addEventListener("click", function () { try { if (musicView) musicView.reload(); } catch (e) {} });
-  $("mHome").addEventListener("click", function () { if (musicView) musicView.setAttribute("src", YT_MUSIC); });
+  $("mBack").addEventListener("click", function () { if (hasMusic) window.cozy.music.back(); });
+  $("mReload").addEventListener("click", function () { if (hasMusic) window.cozy.music.reload(); });
+  $("mHome").addEventListener("click", function () { if (hasMusic) window.cozy.music.home(); });
 
   /* ====================================================
      CALENDAR
