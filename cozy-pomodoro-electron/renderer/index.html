@@ -343,7 +343,21 @@
   }
   .done-list li .check { color: var(--green-4); font-weight: 700; }
   .done-list li .txt { flex: 1; }
-  .done-list li .icon-btn.del { font-size: 15px; }
+  /* 선택(삭제) 모드 */
+  .done-list li.selectable { cursor: pointer; box-shadow: inset 0 0 0 1.5px var(--line); }
+  .done-list li.selectable:hover { box-shadow: inset 0 0 0 1.5px var(--accent); }
+  .done-list li.selected { background: #f6ddd3; box-shadow: inset 0 0 0 2px var(--danger); }
+  .done-list li.selected .check { color: var(--danger); }
+
+  .detail-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .detail-head .back-btn { margin-bottom: 0; }
+  .trash-toggle {
+    border: none; background: var(--bg-soft); width: 36px; height: 36px; border-radius: 10px;
+    cursor: pointer; font-size: 15px; color: var(--ink-soft); font-family: inherit;
+    display: flex; align-items: center; justify-content: center; transition: all 0.15s;
+  }
+  .trash-toggle:hover { background: #f0d5cd; color: var(--danger); }
+  .trash-toggle.active { background: var(--danger); color: #fff; }
   .empty-note { text-align: center; color: var(--ink-soft); font-size: 14px; padding: 30px 0; }
   .back-btn {
     border: none; background: var(--bg-soft); padding: 9px 14px; border-radius: 10px;
@@ -478,7 +492,10 @@
   <!-- ============ DETAIL ============ -->
   <section class="screen" id="screen-detail">
     <div class="card">
-      <button class="back-btn" id="backToCal">‹ 달력으로</button>
+      <div class="detail-head">
+        <button class="back-btn" id="backToCal">‹ 달력으로</button>
+        <button class="trash-toggle" id="detailTrashBtn" title="태스크 삭제" style="display:none;">🗑</button>
+      </div>
       <div class="detail-date" id="detailDate">날짜 선택</div>
       <div class="detail-sub" id="detailSub">달력에서 날짜를 눌러보세요</div>
       <div class="detail-stats">
@@ -486,7 +503,7 @@
         <div class="stat-box"><div class="num" id="statSessions">0</div><div class="lbl">완료 세션</div></div>
       </div>
       <ul class="done-list" id="doneList"></ul>
-      <button class="delete-rec-btn" id="deleteRecBtn" disabled>🗑 선택한 태스크 삭제</button>
+      <button class="delete-rec-btn" id="deleteRecBtn" style="display:none;" disabled>삭제</button>
     </div>
   </section>
 </div>
@@ -1356,12 +1373,14 @@
      DETAIL (+ delete record)
   ==================================================== */
   var currentDetailKey = null;
-  var detailDeleteMode = false;
+  var detailSelecting = false;   // 삭제용 선택 모드
+  var detailSel = {};            // 선택된 태스크 인덱스 { idx: true }
   var deleteRecBtn = $("deleteRecBtn");
+  var detailTrashBtn = $("detailTrashBtn");
 
   function openDetail(key) {
     currentDetailKey = key;
-    detailDeleteMode = false;
+    detailSelecting = false; detailSel = {};
     switchScreen("detail");
     var parts = key.split("-");
     $("detailDate").textContent = parts[0] + "년 " + Number(parts[1]) + "월 " + Number(parts[2]) + "일";
@@ -1379,20 +1398,23 @@
 
     if (tasks.length === 0) {
       $("detailSub").textContent = sessions > 0 ? ("완료 세션 " + sessions + "회") : "이 날은 완료한 기록이 없어요.";
+      detailTrashBtn.style.display = "none";
       deleteRecBtn.style.display = "none";
-      detailDeleteMode = false;
+      detailSelecting = false; detailSel = {};
       var note = document.createElement("div");
       note.className = "empty-note"; note.textContent = "🌙 완료한 태스크가 없는 날이에요";
       list.appendChild(note);
       return;
     }
 
-    deleteRecBtn.style.display = "";
-    deleteRecBtn.disabled = false;
-    deleteRecBtn.textContent = detailDeleteMode ? "완료" : "🗑 삭제";
-    deleteRecBtn.classList.toggle("active", detailDeleteMode);
-    $("detailSub").textContent = detailDeleteMode
-      ? "지울 태스크의 🗑 아이콘을 누르세요"
+    // 우측 상단 휴지통(토글): 평소 🗑, 선택 모드에선 ✕(취소)
+    detailTrashBtn.style.display = "";
+    detailTrashBtn.textContent = detailSelecting ? "✕" : "🗑";
+    detailTrashBtn.title = detailSelecting ? "취소" : "태스크 삭제";
+    detailTrashBtn.classList.toggle("active", detailSelecting);
+
+    $("detailSub").textContent = detailSelecting
+      ? "삭제할 태스크를 선택하세요"
       : "완료한 태스크 " + tasks.length + "개 · 세션 " + sessions + "회";
 
     tasks.forEach(function (t, idx) {
@@ -1402,34 +1424,48 @@
       var span = document.createElement("span");
       span.className = "txt"; span.textContent = t;
       li.appendChild(check); li.appendChild(span);
-      if (detailDeleteMode) {
-        var del = document.createElement("button");
-        del.className = "icon-btn del"; del.title = "이 태스크 삭제"; del.textContent = "🗑";
-        del.addEventListener("click", function () { deleteRecordTask(idx); });
-        li.appendChild(del);
+      if (detailSelecting) {
+        li.classList.add("selectable");
+        if (detailSel[idx]) li.classList.add("selected");
+        li.addEventListener("click", function () {
+          if (detailSel[idx]) delete detailSel[idx]; else detailSel[idx] = true;
+          renderDetail();
+        });
       }
       list.appendChild(li);
     });
+
+    // 하단 삭제 버튼: 선택 모드에서만 노출
+    if (detailSelecting) {
+      var n = Object.keys(detailSel).length;
+      deleteRecBtn.style.display = "";
+      deleteRecBtn.disabled = n === 0;
+      deleteRecBtn.textContent = n === 0 ? "삭제" : ("삭제 (" + n + ")");
+    } else {
+      deleteRecBtn.style.display = "none";
+    }
   }
 
-  function deleteRecordTask(idx) {
+  detailTrashBtn.addEventListener("click", function () {
+    detailSelecting = !detailSelecting;
+    detailSel = {};
+    renderDetail();
+  });
+
+  deleteRecBtn.addEventListener("click", function () {
     var rec = data.records[currentDetailKey];
     if (!rec) return;
-    rec.tasks.splice(idx, 1);
+    var idxs = Object.keys(detailSel).map(Number).sort(function (a, b) { return b - a; }); // 큰 인덱스부터 splice
+    if (!idxs.length) return;
+    idxs.forEach(function (i) { rec.tasks.splice(i, 1); });
     if (rec.tasks.length === 0 && rec.sessions === 0) delete data.records[currentDetailKey];
     save();
     refreshCalendar();
     updateTodaySessions();
-    showToast("기록을 삭제했어요");
+    showToast(idxs.length + "개 기록을 삭제했어요");
+    detailSelecting = false; detailSel = {};
     if (data.records[currentDetailKey]) renderDetail();
     else switchScreen("cal");
-  }
-
-  deleteRecBtn.addEventListener("click", function () {
-    var rec = data.records[currentDetailKey];
-    if (!rec || !rec.tasks.length) return;
-    detailDeleteMode = !detailDeleteMode;
-    renderDetail();
   });
 
   $("backToCal").addEventListener("click", function () { switchScreen("cal"); });
