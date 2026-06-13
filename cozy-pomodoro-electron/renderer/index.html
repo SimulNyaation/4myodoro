@@ -78,6 +78,8 @@
   .titlebar .tb-controls #pinBtn.active { color: var(--accent-deep); background: var(--bg-soft); }
 
   .app { width: 100%; max-width: 460px; }
+  /* 음악 탭은 창 폭을 가득 쓰도록 폭 제한 해제 */
+  body.music-active .app { max-width: none; }
 
   header { text-align: center; margin-bottom: 16px; }
   header h1 {
@@ -292,6 +294,8 @@
   }
   .music-frame webview { width: 100%; height: 100%; border: 0; display: block; }
   .music-note { font-size: 11.5px; color: var(--ink-soft); margin-top: 10px; line-height: 1.5; }
+  /* 음악 탭 카드는 여백을 줄여 브라우저 영역을 넓게 */
+  #screen-music .card { padding: 12px; }
 
   /* ---- calendar ---- */
   .cal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
@@ -445,7 +449,7 @@
       </div>
       <div class="music-frame" id="musicFrame">불러오는 중…</div>
       <p class="music-note">
-        YouTube Music을 모바일(세로) 화면으로 띄워 앱 폭에 맞췄어요. 처음 한 번 로그인하면 계정이 유지됩니다.
+        처음 한 번 로그인하면 계정이 유지됩니다. 음악 탭에선 창 폭을 가득 쓰니, <b>창 가장자리를 드래그해 넓히면</b> 더 넓게 볼 수 있어요.
       </p>
     </div>
   </section>
@@ -1249,15 +1253,15 @@
     ["pomo", "music", "cal", "detail"].forEach(function (s) {
       $("screen-" + s).classList.toggle("active", s === name);
     });
+    document.body.classList.toggle("music-active", name === "music");
     if (name === "cal") refreshCalendar();
     if (name === "music") ensureMusic();
   }
 
   /* ====================================================
-     MUSIC (webview) — YouTube Music, 모바일 UA로 세로 레이아웃
+     MUSIC (webview) — YouTube Music (데스크탑 레이아웃, 창 폭 가득)
   ==================================================== */
   var YT_MUSIC = "https://music.youtube.com";
-  var MOBILE_UA = "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36";
   var musicFrame = $("musicFrame");
   var musicView = null, musicLoaded = false;
 
@@ -1268,7 +1272,6 @@
     musicView = document.createElement("webview");
     musicView.setAttribute("partition", "persist:music");
     musicView.setAttribute("allowpopups", "");
-    musicView.setAttribute("useragent", MOBILE_UA);
     musicView.setAttribute("src", YT_MUSIC);
     musicFrame.appendChild(musicView);
   }
