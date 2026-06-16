@@ -976,6 +976,8 @@
 
   // CAT/DOG 게이지 중앙에 들어갈 이미지
   var CENTER_IMG = { cat: "assets/catwatch.png", dog: "assets/dogwatch.png" };
+  // 이미지 확대 배율 (원형 클립은 그대로 두고 그림만 키워 크롭 — CAT은 1.5배 크게)
+  var IMG_ZOOM = { cat: 1.5, dog: 1 };
 
   var CLOCK_CX = 160, CLOCK_CY = 116, CLOCK_R = 96;
   var CLOCK_C = 2 * Math.PI * CLOCK_R;
@@ -994,11 +996,12 @@
     } else {
       var img = CENTER_IMG[scene] || CENTER_IMG.cat;
       var ir = CENTER_IMG_R;
+      var iw = ir * 2 * (IMG_ZOOM[scene] || 1); // 그림을 키워 같은 원 안에서 크롭
       center =
         '<clipPath id="imgClip"><circle cx="' + cx + '" cy="' + cy + '" r="' + ir + '"/></clipPath>' +
         '<circle cx="' + cx + '" cy="' + cy + '" r="' + ir + '" fill="#fbf3e7"/>' +
-        '<image href="' + img + '" x="' + (cx - ir) + '" y="' + (cy - ir) + '" ' +
-          'width="' + (ir * 2) + '" height="' + (ir * 2) + '" ' +
+        '<image href="' + img + '" x="' + (cx - iw / 2) + '" y="' + (cy - iw / 2) + '" ' +
+          'width="' + iw + '" height="' + iw + '" ' +
           'preserveAspectRatio="xMidYMid meet" clip-path="url(#imgClip)"/>';
     }
     return '<defs><linearGradient id="arcg" x1="0" y1="0" x2="1" y2="1">' +
