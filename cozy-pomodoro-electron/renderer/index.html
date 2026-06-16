@@ -581,7 +581,10 @@
   function normalize(d) {
     if (!d.settings) d.settings = { scene: "cat", music: "ytmusic", minutes: 30 };
     if (!d.settings.scene) d.settings.scene = "cat";
-    if (["cat", "cat2", "bichon", "clock"].indexOf(d.settings.scene) === -1) d.settings.scene = "cat";
+    // 이전 장면 키 마이그레이션 (cat2/bichon 등 → cat/dog)
+    if (d.settings.scene === "cat2") d.settings.scene = "cat";
+    if (d.settings.scene === "bichon") d.settings.scene = "dog";
+    if (["cat", "dog", "clock"].indexOf(d.settings.scene) === -1) d.settings.scene = "cat";
     if (!d.settings.music) d.settings.music = "ytmusic";
     if (!d.settings.minutes) d.settings.minutes = 30;
     if (!Array.isArray(d.projects) || !d.projects.length) {
@@ -855,7 +858,7 @@
     data.settings.minutes = m; save();
     if (!running) {
       totalSeconds = m * 60; remaining = totalSeconds; renderTime();
-      if (sceneKind() === "clock") drawSceneIdle();
+      drawSceneIdle();
     }
   });
 
@@ -963,95 +966,44 @@
   stopBtn.addEventListener("click", stopTimer);
 
   /* ====================================================
-     SCENES (6 variants)
+     SCENES (CAT / DOG / POMO) — 공통 원형 게이지, 사이즈 동일
   ==================================================== */
   var SCENES = [
-    { key: "cat",    em: "🐱", label: "도비" },
-    { key: "cat2",   em: "🧡", label: "레오" },
-    { key: "bichon", em: "🐶", label: "돌돌" },
-    { key: "clock",  em: "⏱", label: "뽀모도로" }
+    { key: "cat",   em: "🐱", label: "CAT" },
+    { key: "dog",   em: "🐶", label: "DOG" },
+    { key: "clock", em: "⏱", label: "POMO" }
   ];
 
-  var CAT_PALETTES = {
-    cat:  { fur: "#a8917f", furDark: "#9a8576", belly: "#c4b1a1", earInner: "#e0b9a0", nose: "#d98e63", whisker: "#cdbcab", toy: "#d98e63", toyLine: "#b96f47", stripes: false },
-    cat2: { fur: "#e0a86a", furDark: "#cf8f4f", belly: "#f3dcb6", earInner: "#e8a98a", nose: "#c0764c", whisker: "#e6cda6", toy: "#7fa8c9", toyLine: "#5d86a6", stripes: true }
-  };
+  // CAT/DOG 게이지 중앙에 들어갈 이미지
+  var CENTER_IMG = { cat: "assets/catwatch.png", dog: "assets/dogwatch.png" };
 
   var CLOCK_CX = 160, CLOCK_CY = 116, CLOCK_R = 96;
   var CLOCK_C = 2 * Math.PI * CLOCK_R;
+  var CENTER_IMG_R = 82;
 
-  function floorSVG() {
-    return '<defs><radialGradient id="floor" cx="50%" cy="100%" r="80%">' +
-      '<stop offset="0%" stop-color="#f3e3cb"/><stop offset="100%" stop-color="#ecd9bd"/></radialGradient></defs>' +
-      '<ellipse cx="160" cy="150" rx="150" ry="22" fill="url(#floor)"/>' +
-      '<ellipse cx="160" cy="150" rx="95" ry="14" fill="#e3c79f" opacity="0.6"/>';
-  }
-  function zzzSVG() {
-    return '<text id="zzz" x="205" y="70" font-size="16" fill="#b9a48f" opacity="0" font-family="sans-serif">z</text>';
-  }
-
-  function catSVG(p) {
-    var stripes = p.stripes ?
-      '<path d="M 168 104 q 12 -4 24 0 M 170 112 q 12 -3 22 0 M 172 120 q 10 -2 18 0" stroke="' + p.furDark + '" stroke-width="2" fill="none" opacity="0.6"/>' +
-      '<path d="M 138 84 l 3 -7 M 148 82 l 0 -7 M 158 84 l -3 -7" stroke="' + p.furDark + '" stroke-width="2" fill="none" opacity="0.55"/>' : '';
-    return floorSVG() +
-      '<g id="toy"><circle cx="0" cy="0" r="13" fill="' + p.toy + '"/>' +
-        '<path d="M -13 0 Q 0 -9 13 0 M -11 5 Q 0 -4 11 5 M -11 -5 Q 0 4 11 -5 M 0 -13 Q 9 0 0 13 M -6 -11 Q 4 0 -4 12 M 6 -11 Q -4 0 4 12" stroke="' + p.toyLine + '" stroke-width="1.3" fill="none" opacity="0.8"/></g>' +
-      '<g id="cat">' +
-        '<path id="tail" d="M 205 120 Q 250 118 248 95 Q 246 78 232 84" stroke="' + p.furDark + '" stroke-width="11" fill="none" stroke-linecap="round"/>' +
-        '<ellipse cx="180" cy="120" rx="42" ry="30" fill="' + p.fur + '"/>' +
-        '<ellipse cx="180" cy="126" rx="30" ry="20" fill="' + p.belly + '"/>' +
-        '<g id="paws"><rect x="150" y="120" width="11" height="26" rx="5.5" fill="' + p.fur + '"/><rect x="166" y="124" width="11" height="24" rx="5.5" fill="' + p.furDark + '"/></g>' +
-        '<g id="head">' +
-          '<ellipse cx="148" cy="98" rx="26" ry="24" fill="' + p.fur + '"/>' +
-          '<path d="M 128 84 L 122 64 L 142 78 Z" fill="' + p.fur + '"/>' +
-          '<path d="M 168 84 L 174 64 L 154 78 Z" fill="' + p.fur + '"/>' +
-          '<path d="M 129 82 L 126 70 L 138 79 Z" fill="' + p.earInner + '"/>' +
-          '<path d="M 167 82 L 170 70 L 158 79 Z" fill="' + p.earInner + '"/>' +
-          '<ellipse cx="148" cy="102" rx="16" ry="13" fill="' + p.belly + '"/>' +
-          stripes +
-          '<g id="eyes"><circle cx="140" cy="96" r="3.2" fill="#3a2f28"/><circle cx="156" cy="96" r="3.2" fill="#3a2f28"/><circle cx="141" cy="95" r="1" fill="#fff"/><circle cx="157" cy="95" r="1" fill="#fff"/></g>' +
-          '<path d="M 146 103 L 150 103 L 148 106 Z" fill="' + p.nose + '"/>' +
-          '<path d="M 148 106 Q 144 109 141 106 M 148 106 Q 152 109 155 106" stroke="#8a7665" stroke-width="1" fill="none"/>' +
-          '<path d="M 132 101 L 118 99 M 132 104 L 119 105 M 164 101 L 178 99 M 164 104 L 177 105" stroke="' + p.whisker + '" stroke-width="1" fill="none"/>' +
-        '</g>' +
-      '</g>' + zzzSVG();
-  }
-
-  function bichonSVG() {
-    var fur = "#fdfdfb", furDark = "#ece5da", ear = "#efe7da", belly = "#ffffff";
-    return floorSVG() +
-      '<g id="toy"><circle cx="0" cy="0" r="13" fill="#d96b5f"/>' +
-        '<path d="M -13 0 H 13 M 0 -13 V 13" stroke="#fff" stroke-width="2" opacity="0.65"/>' +
-        '<path d="M -9 -9 Q 0 0 9 9 M 9 -9 Q 0 0 -9 9" stroke="#b94f44" stroke-width="1.2" fill="none" opacity="0.5"/></g>' +
-      '<g id="dog">' +
-        '<path id="tail" d="M 208 116 Q 240 112 236 94 Q 233 82 222 88" stroke="' + furDark + '" stroke-width="14" fill="none" stroke-linecap="round"/>' +
-        '<ellipse cx="180" cy="120" rx="44" ry="32" fill="' + fur + '"/>' +
-        '<ellipse cx="162" cy="112" rx="22" ry="20" fill="' + fur + '"/>' +
-        '<ellipse cx="198" cy="114" rx="20" ry="18" fill="' + fur + '"/>' +
-        '<ellipse cx="180" cy="128" rx="30" ry="18" fill="' + belly + '"/>' +
-        '<g id="paws"><rect x="152" y="122" width="13" height="26" rx="6.5" fill="' + fur + '"/><rect x="170" y="126" width="13" height="24" rx="6.5" fill="' + furDark + '"/></g>' +
-        '<g id="head">' +
-          '<ellipse cx="146" cy="96" rx="31" ry="29" fill="' + fur + '"/>' +
-          '<ellipse cx="146" cy="78" rx="23" ry="15" fill="' + fur + '"/>' +
-          '<ellipse cx="118" cy="104" rx="13" ry="22" fill="' + ear + '"/>' +
-          '<ellipse cx="174" cy="104" rx="13" ry="22" fill="' + ear + '"/>' +
-          '<ellipse cx="124" cy="92" rx="11" ry="14" fill="' + fur + '"/>' +
-          '<ellipse cx="168" cy="92" rx="11" ry="14" fill="' + fur + '"/>' +
-          '<ellipse cx="146" cy="106" rx="21" ry="17" fill="' + belly + '"/>' +
-          '<g id="eyes"><circle cx="137" cy="94" r="3.6" fill="#34291f"/><circle cx="155" cy="94" r="3.6" fill="#34291f"/><circle cx="138" cy="93" r="1.1" fill="#fff"/><circle cx="156" cy="93" r="1.1" fill="#fff"/></g>' +
-          '<ellipse cx="146" cy="104" rx="5" ry="4" fill="#2c2420"/>' +
-          '<path d="M 146 108 Q 142 113 137 110 M 146 108 Q 150 113 155 110" stroke="#b8a89a" stroke-width="1.3" fill="none"/>' +
-        '</g>' +
-      '</g>' + zzzSVG();
-  }
-
-  function clockSVG() {
+  // 모든 장면이 동일한 원형 게이지를 사용한다.
+  //  - POMO : 가운데에 디지털 시간(#digTime)
+  //  - CAT/DOG : 가운데에 동물 이미지 (시간 숫자 없음 — 남은 시간은 게이지로만 느낌)
+  function ringSVG(scene) {
     var cx = CLOCK_CX, cy = CLOCK_CY, r = CLOCK_R, C = CLOCK_C;
-    return '<defs>' +
-        '<linearGradient id="arcg" x1="0" y1="0" x2="1" y2="1">' +
-          '<stop offset="0" stop-color="#e9b074"/><stop offset="1" stop-color="#c0764c"/></linearGradient>' +
-      '</defs>' +
+    var center;
+    if (scene === "clock") {
+      center = '<text id="digTime" x="' + cx + '" y="' + (cy + 17) + '" font-size="52" ' +
+        'fill="#5a4a3a" text-anchor="middle" font-family="Consolas, Menlo, monospace" ' +
+        'font-weight="700" letter-spacing="1">30:00</text>';
+    } else {
+      var img = CENTER_IMG[scene] || CENTER_IMG.cat;
+      var ir = CENTER_IMG_R;
+      center =
+        '<clipPath id="imgClip"><circle cx="' + cx + '" cy="' + cy + '" r="' + ir + '"/></clipPath>' +
+        '<circle cx="' + cx + '" cy="' + cy + '" r="' + ir + '" fill="#fbf3e7"/>' +
+        '<image href="' + img + '" x="' + (cx - ir) + '" y="' + (cy - ir) + '" ' +
+          'width="' + (ir * 2) + '" height="' + (ir * 2) + '" ' +
+          'preserveAspectRatio="xMidYMid meet" clip-path="url(#imgClip)"/>';
+    }
+    return '<defs><linearGradient id="arcg" x1="0" y1="0" x2="1" y2="1">' +
+        '<stop offset="0" stop-color="#e9b074"/><stop offset="1" stop-color="#c0764c"/></linearGradient></defs>' +
+      center +
       // 잔잔한 베이스 트랙
       '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="#ece0cd" stroke-width="12"/>' +
       // 남은 시간 진행 아크 (위에서 시작해 시계방향으로 줄어듦)
@@ -1059,29 +1011,18 @@
         'stroke-width="12" stroke-linecap="round" transform="rotate(-90 ' + cx + ' ' + cy + ')" ' +
         'stroke-dasharray="' + C.toFixed(2) + '" stroke-dashoffset="0"/>' +
       // 진행 끝 점
-      '<circle id="arcDot" cx="' + cx + '" cy="' + (cy - r) + '" r="7" fill="#c0764c"/>' +
-      // 중앙 디지털 시간
-      '<text id="digTime" x="' + cx + '" y="' + (cy + 17) + '" font-size="52" fill="#5a4a3a" text-anchor="middle" ' +
-        'font-family="Consolas, Menlo, monospace" font-weight="700" letter-spacing="1">30:00</text>' +
-      '<text id="zzz" x="0" y="0" opacity="0"></text>';
+      '<circle id="arcDot" cx="' + cx + '" cy="' + (cy - r) + '" r="7" fill="#c0764c"/>';
   }
-
-  function sceneKind() { return data.settings.scene === "clock" ? "clock" : "creature"; }
 
   function buildSceneSVG() {
-    var s = data.settings.scene, inner;
-    if (s === "clock") inner = clockSVG();
-    else if (s === "bichon") inner = bichonSVG();
-    else inner = catSVG(CAT_PALETTES[s] || CAT_PALETTES.cat);
-    var vb = (s === "clock") ? "0 0 320 232" : "0 0 320 175";
-    return '<svg viewBox="' + vb + '" xmlns="http://www.w3.org/2000/svg">' + inner + '</svg>';
+    return '<svg viewBox="0 0 320 232" xmlns="http://www.w3.org/2000/svg">' +
+      ringSVG(data.settings.scene) + '</svg>';
   }
 
-  var toy, tail, paws, head, zzz, digTime, arc, arcDot;
-  var animPlaying = false, animStart = 0, animFrame = null, blinkTimer = null;
+  var digTime, arc, arcDot;
+  var animPlaying = false, animStart = 0, animFrame = null;
 
   function grabRefs() {
-    toy = $("toy"); tail = $("tail"); paws = $("paws"); head = $("head"); zzz = $("zzz");
     digTime = $("digTime"); arc = $("arc"); arcDot = $("arcDot");
   }
 
@@ -1097,33 +1038,23 @@
   }
 
   function renderScene() {
-    clearInterval(blinkTimer);
     if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
     $("sceneStage").innerHTML = buildSceneSVG();
-    pomoCard.classList.toggle("digital-mode", sceneKind() === "clock");
+    // 모든 장면이 게이지 기반 → 바깥 큰 숫자는 항상 숨김
+    pomoCard.classList.add("digital-mode");
     grabRefs();
     if (running) setScenePlaying(true);
     else drawSceneIdle();
   }
 
   function drawSceneIdle() {
-    if (sceneKind() === "clock") {
-      setClockProgress(1);
-      if (digTime) digTime.textContent = fmt(remaining);
-    } else {
-      if (toy) toy.setAttribute("transform", "translate(110,135)");
-      if (paws) paws.setAttribute("transform", "translate(0,0)");
-      if (tail) tail.setAttribute("transform", "rotate(0 205 120)");
-      if (head) head.setAttribute("transform", "rotate(0 148 98)");
-      sleepyBlink();
-    }
+    setClockProgress(1);
+    if (digTime) digTime.textContent = fmt(remaining);
   }
 
   function setScenePlaying(on) {
     animPlaying = on;
     if (on) {
-      clearInterval(blinkTimer);
-      if (zzz) zzz.setAttribute("opacity", "0");
       animStart = performance.now();
       if (!animFrame) animFrame = requestAnimationFrame(animLoop);
     } else {
@@ -1132,32 +1063,12 @@
     }
   }
 
-  function animLoop(now) {
-    var t = (now - animStart) / 1000;
-    if (sceneKind() === "clock") {
-      var fracR = totalSeconds > 0 ? Math.max(0, remaining) / totalSeconds : 0;
-      setClockProgress(fracR);
-    } else {
-      var tx = 110 + Math.sin(t * 2.2) * 26;
-      var ty = 135 - Math.abs(Math.sin(t * 4.4)) * 30;
-      if (toy) toy.setAttribute("transform", "translate(" + tx + "," + ty + ") rotate(" + (t * 220 % 360) + " 0 0)");
-      if (paws) paws.setAttribute("transform", "translate(0," + (Math.sin(t * 4.4) * -6) + ")");
-      if (tail) tail.setAttribute("transform", "rotate(" + (Math.sin(t * 3) * 14) + " 205 120)");
-      if (head) head.setAttribute("transform", "rotate(" + (Math.sin(t * 2.2) * 6) + " 148 98)");
-    }
+  function animLoop() {
+    var fracR = totalSeconds > 0 ? Math.max(0, remaining) / totalSeconds : 0;
+    setClockProgress(fracR);
+    if (digTime) digTime.textContent = fmt(remaining);
     if (animPlaying) animFrame = requestAnimationFrame(animLoop);
     else animFrame = null;
-  }
-
-  function sleepyBlink() {
-    clearInterval(blinkTimer);
-    if (!zzz) return;
-    var zo = 0;
-    blinkTimer = setInterval(function () {
-      if (running) { clearInterval(blinkTimer); return; }
-      zo = zo ? 0 : 1;
-      zzz.setAttribute("opacity", zo ? "0.7" : "0");
-    }, 1400);
   }
 
   /* ---------- scene menu ---------- */
@@ -1199,7 +1110,7 @@
     try {
       var s = data.settings.scene;
       if (s === "clock") playAlarm();
-      else if (s === "bichon") playBark();
+      else if (s === "dog") playBark();
       else playMeow();
     } catch (e) {}
   }

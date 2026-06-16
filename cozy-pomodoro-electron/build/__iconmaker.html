@@ -1,0 +1,24 @@
+<!doctype html><html><head><meta charset="utf-8">
+<style>html,body{margin:0;padding:0;width:256px;height:256px;background:transparent;overflow:hidden}canvas{display:block}</style>
+</head><body>
+<canvas id="c" width="256" height="256"></canvas>
+<script>
+  window.__ready = false;
+  var cv = document.getElementById("c"), x = cv.getContext("2d"), im = new Image();
+  im.onload = function () {
+    var s = 256, r = Math.round(s * 0.22); // 세련된 라운딩 (squircle 느낌)
+    x.clearRect(0, 0, s, s);
+    x.beginPath();
+    x.moveTo(r, 0);
+    x.arcTo(s, 0, s, s, r);
+    x.arcTo(s, s, 0, s, r);
+    x.arcTo(0, s, 0, 0, r);
+    x.arcTo(0, 0, s, 0, r);
+    x.closePath();
+    x.clip();
+    x.drawImage(im, 0, 0, s, s);
+    window.__ready = true;
+  };
+  im.src = "source-icon.png";
+</script>
+</body></html>
