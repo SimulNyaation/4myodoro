@@ -1,12 +1,12 @@
 /**
- * 4myo1dolldoll - 고양이·강아지와 함께하는 뽀모도로 & 태스크 위젯
+ * POMODOLLDOLL - 고양이·강아지와 함께하는 뽀모도로 & 태스크 위젯
  * Electron 메인 프로세스
  */
 
 const { app, BrowserWindow, WebContentsView, Tray, Menu, ipcMain, nativeImage } = require('electron');
 const path = require('path');
 
-const APP_NAME = '4myo1dolldoll';
+const APP_NAME = 'POMODOLLDOLL';
 const MUSIC_URL = 'https://music.youtube.com';
 
 let mainWindow = null;

@@ -1,7 +1,7 @@
-# 🐱 4myo1dolldoll
+# 🐱 POMODOLLDOLL
 
 고양이·강아지와 함께하는 코지·세피아톤 뽀모도로 & 태스크 데스크탑 앱 (Electron).
-(이전 이름: CozyPomodoro)
+(이전 이름: CozyPomodoro → 4myo1dolldoll)
 
 ## 기능
 - 뽀모도로 30분 ~ 2시간 슬라이더 조절, 화면을 옮겨도 흐르는 종료시각 기반 타이머
@@ -41,8 +41,8 @@ npm run build:win        # NSIS 설치본 + 포터블 둘 다
 npm run build:portable   # 포터블 단일 exe만
 ```
 결과물은 `dist/` 폴더에 생성됩니다:
-- `4myo1dolldoll-1.1.0-x64.exe` (설치 프로그램)
-- `4myo1dolldoll-portable-1.1.0.exe` (설치 없이 실행)
+- `POMODOLLDOLL-1.1.0-x64.exe` (설치 프로그램)
+- `POMODOLLDOLL-portable-1.1.0.exe` (설치 없이 실행)
 
 > `appId`를 그대로 유지해, 기존 **CozyPomodoro 1.0.0** 설치본 위에 그대로 업그레이드 설치됩니다.
 
